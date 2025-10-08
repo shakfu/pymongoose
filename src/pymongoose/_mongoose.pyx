@@ -11,7 +11,8 @@ from cpython.unicode cimport PyUnicode_DecodeUTF8
 from libc.stdint cimport uintptr_t, uint16_t
 from libc.string cimport memset
 from libc.stddef cimport size_t
-from libc.stdlib cimport free
+from libc.stdlib cimport free, malloc
+from libcpp cimport bool as cbool
 from cython cimport sizeof
 
 cdef extern from *:
@@ -42,6 +43,9 @@ from .mongoose cimport (
     MG_EV_WS_OPEN as C_MG_EV_WS_OPEN,
     MG_EV_WS_MSG as C_MG_EV_WS_MSG,
     MG_EV_WS_CTL as C_MG_EV_WS_CTL,
+    MG_EV_MQTT_CMD as C_MG_EV_MQTT_CMD,
+    MG_EV_MQTT_MSG as C_MG_EV_MQTT_MSG,
+    MG_EV_MQTT_OPEN as C_MG_EV_MQTT_OPEN,
     MG_EV_WAKEUP as C_MG_EV_WAKEUP,
     MG_EV_USER as C_MG_EV_USER,
     mg_addr,
@@ -93,6 +97,22 @@ from .mongoose cimport (
     mg_tls_free,
     mg_wakeup,
     mg_wakeup_init,
+    mg_url_encode,
+    mg_http_next_multipart,
+    mg_http_part,
+    mg_mqtt_opts,
+    mg_mqtt_message,
+    mg_mqtt_connect,
+    mg_mqtt_listen,
+    mg_mqtt_login,
+    mg_mqtt_pub,
+    mg_mqtt_sub,
+    mg_mqtt_ping,
+    mg_mqtt_pong,
+    mg_mqtt_disconnect,
+    mg_timer,
+    mg_timer_fn_t,
+    mg_timer_add,
     WEBSOCKET_OP_TEXT as C_WEBSOCKET_OP_TEXT,
     WEBSOCKET_OP_BINARY as C_WEBSOCKET_OP_BINARY,
     WEBSOCKET_OP_PING as C_WEBSOCKET_OP_PING,
@@ -106,6 +126,7 @@ __all__ = [
     "Connection",
     "HttpMessage",
     "WsMessage",
+    "MqttMessage",
     "MG_EV_ERROR",
     "MG_EV_OPEN",
     "MG_EV_POLL",
@@ -121,6 +142,9 @@ __all__ = [
     "MG_EV_WS_OPEN",
     "MG_EV_WS_MSG",
     "MG_EV_WS_CTL",
+    "MG_EV_MQTT_CMD",
+    "MG_EV_MQTT_MSG",
+    "MG_EV_MQTT_OPEN",
     "MG_EV_WAKEUP",
     "MG_EV_USER",
     "WEBSOCKET_OP_TEXT",
@@ -132,6 +156,8 @@ __all__ = [
     "json_get_bool",
     "json_get_long",
     "json_get_str",
+    "url_encode",
+    "http_parse_multipart",
 ]
 
 MG_EV_ERROR = C_MG_EV_ERROR
@@ -149,6 +175,9 @@ MG_EV_HTTP_MSG = C_MG_EV_HTTP_MSG
 MG_EV_WS_OPEN = C_MG_EV_WS_OPEN
 MG_EV_WS_MSG = C_MG_EV_WS_MSG
 MG_EV_WS_CTL = C_MG_EV_WS_CTL
+MG_EV_MQTT_CMD = C_MG_EV_MQTT_CMD
+MG_EV_MQTT_MSG = C_MG_EV_MQTT_MSG
+MG_EV_MQTT_OPEN = C_MG_EV_MQTT_OPEN
 MG_EV_WAKEUP = C_MG_EV_WAKEUP
 MG_EV_USER = C_MG_EV_USER
 
@@ -262,6 +291,43 @@ cdef class WsMessage:
     property flags:
         def __get__(self):
             return self._msg.flags if self._msg != NULL else 0
+
+
+cdef class MqttMessage:
+    """View over an incoming MQTT message."""
+
+    cdef mg_mqtt_message *_msg
+
+    cdef void _assign(self, mg_mqtt_message *msg):
+        self._msg = msg
+
+    property topic:
+        def __get__(self):
+            return _mg_str_to_text(self._msg.topic) if self._msg != NULL else ""
+
+    property data:
+        def __get__(self):
+            return _mg_str_to_bytes(self._msg.data) if self._msg != NULL else b""
+
+    property text:
+        def __get__(self):
+            return _mg_str_to_text(self._msg.data) if self._msg != NULL else ""
+
+    property id:
+        def __get__(self):
+            return self._msg.id if self._msg != NULL else 0
+
+    property cmd:
+        def __get__(self):
+            return self._msg.cmd if self._msg != NULL else 0
+
+    property qos:
+        def __get__(self):
+            return self._msg.qos if self._msg != NULL else 0
+
+    property ack:
+        def __get__(self):
+            return self._msg.ack if self._msg != NULL else 0
 
 
 cdef class Connection:
@@ -452,6 +518,59 @@ cdef class Connection:
         cdef const char *buf = payload_b
         mg_ws_send(self._ptr(), buf, len(payload_b), op)
 
+    def mqtt_pub(self, topic: str, message, qos=0, retain=False):
+        """Publish an MQTT message.
+
+        Args:
+            topic: MQTT topic
+            message: Message payload (str or bytes)
+            qos: Quality of service (0, 1, or 2)
+            retain: Retain flag
+
+        Returns:
+            Message ID
+        """
+        cdef mg_mqtt_opts opts
+        memset(&opts, 0, sizeof(mg_mqtt_opts))
+
+        cdef bytes topic_b = topic.encode("utf-8")
+        cdef bytes msg_b
+        if isinstance(message, str):
+            msg_b = message.encode("utf-8")
+        else:
+            msg_b = bytes(message)
+
+        opts.topic = mg_str_n(topic_b, len(topic_b))
+        opts.message = mg_str_n(msg_b, len(msg_b))
+        opts.qos = qos
+        opts.retain = retain
+
+        return mg_mqtt_pub(self._ptr(), &opts)
+
+    def mqtt_sub(self, topic: str, qos=0):
+        """Subscribe to an MQTT topic.
+
+        Args:
+            topic: MQTT topic (can include wildcards)
+            qos: Quality of service (0, 1, or 2)
+        """
+        cdef mg_mqtt_opts opts
+        memset(&opts, 0, sizeof(mg_mqtt_opts))
+
+        cdef bytes topic_b = topic.encode("utf-8")
+        opts.topic = mg_str_n(topic_b, len(topic_b))
+        opts.qos = qos
+
+        mg_mqtt_sub(self._ptr(), &opts)
+
+    def mqtt_ping(self):
+        """Send MQTT ping."""
+        mg_mqtt_ping(self._ptr())
+
+    def mqtt_pong(self):
+        """Send MQTT pong."""
+        mg_mqtt_pong(self._ptr())
+
     def close(self):
         """Schedule closing of the connection."""
         if self._conn != NULL:
@@ -520,6 +639,7 @@ cdef class Manager:
     cdef object _wrap_event_data(self, int ev, void *ev_data):
         cdef HttpMessage view
         cdef WsMessage ws
+        cdef MqttMessage mqtt
         cdef mg_str *wakeup_data
         if ev == MG_EV_HTTP_MSG or ev == MG_EV_HTTP_HDRS or ev == MG_EV_WS_OPEN:
             if ev_data != NULL:
@@ -533,6 +653,15 @@ cdef class Manager:
                 ws._assign(<mg_ws_message*> ev_data)
                 return ws
             return None
+        elif ev == MG_EV_MQTT_MSG or ev == MG_EV_MQTT_CMD:
+            if ev_data != NULL:
+                mqtt = MqttMessage.__new__(MqttMessage)
+                mqtt._assign(<mg_mqtt_message*> ev_data)
+                return mqtt
+            return None
+        elif ev == MG_EV_MQTT_OPEN and ev_data != NULL:
+            # MQTT_OPEN provides a pointer to connection status code
+            return (<int*> ev_data)[0]
         elif ev == MG_EV_ERROR and ev_data != NULL:
             return (<char*> ev_data).decode("utf-8", "ignore")
         elif ev == MG_EV_WAKEUP and ev_data != NULL:
@@ -571,6 +700,67 @@ cdef class Manager:
             conn = mg_connect(&self._mgr, url_b, _event_bridge, NULL)
         if conn == NULL:
             raise RuntimeError(f"Failed to connect to '{url}'")
+        py_conn = self._ensure_connection(conn)
+        py_conn._handler = handler
+        return py_conn
+
+    def mqtt_connect(self, url: str, handler=None, client_id="", username="", password="", clean_session=True, keepalive=60):
+        """Connect to an MQTT broker.
+
+        Args:
+            url: Broker URL (e.g., 'mqtt://broker.hivemq.com:1883')
+            handler: Event handler callback
+            client_id: MQTT client ID (autogenerated if empty)
+            username: MQTT username (optional)
+            password: MQTT password (optional)
+            clean_session: Clean session flag
+            keepalive: Keep-alive interval in seconds
+
+        Returns:
+            Connection object
+        """
+        cdef mg_mqtt_opts opts
+        memset(&opts, 0, sizeof(mg_mqtt_opts))
+
+        cdef bytes client_id_b = client_id.encode("utf-8") if client_id else b""
+        cdef bytes user_b = username.encode("utf-8") if username else b""
+        cdef bytes pass_b = password.encode("utf-8") if password else b""
+
+        if client_id_b:
+            opts.client_id = mg_str_n(client_id_b, len(client_id_b))
+        if user_b:
+            opts.user = mg_str_n(user_b, len(user_b))
+        if pass_b:
+            opts.password = mg_str_n(pass_b, len(pass_b))
+
+        opts.clean = clean_session
+        opts.keepalive = keepalive
+        opts.version = 4  # MQTT 3.1.1
+
+        cdef bytes url_b = url.encode("utf-8")
+        cdef mg_connection *conn = mg_mqtt_connect(&self._mgr, url_b, &opts, _event_bridge, NULL)
+        if conn == NULL:
+            raise RuntimeError(f"Failed to connect to MQTT broker '{url}'")
+
+        py_conn = self._ensure_connection(conn)
+        py_conn._handler = handler
+        return py_conn
+
+    def mqtt_listen(self, url: str, handler=None):
+        """Listen for MQTT connections (broker mode).
+
+        Args:
+            url: Listen URL (e.g., 'mqtt://0.0.0.0:1883')
+            handler: Event handler callback
+
+        Returns:
+            Listener connection object
+        """
+        cdef bytes url_b = url.encode("utf-8")
+        cdef mg_connection *conn = mg_mqtt_listen(&self._mgr, url_b, _event_bridge, NULL)
+        if conn == NULL:
+            raise RuntimeError(f"Failed to listen for MQTT on '{url}'")
+
         py_conn = self._ensure_connection(conn)
         py_conn._handler = handler
         return py_conn
@@ -691,7 +881,7 @@ def json_get_bool(data, path: str, default=None):
         json_b = bytes(data)
     cdef bytes path_b = path.encode("utf-8")
     cdef mg_str json_str = mg_str_n(json_b, len(json_b))
-    cdef bint value = 0
+    cdef cbool value = False
     if mg_json_get_bool(json_str, path_b, &value):
         # mg_json_get_bool returns true on success, value contains the actual boolean
         return value != 0
@@ -743,3 +933,67 @@ def json_get_str(data, path: str):
         return result.decode("utf-8", "surrogateescape")
     finally:
         free(result)
+
+
+# URL encoding
+def url_encode(data: str) -> str:
+    """URL-encode a string.
+
+    Args:
+        data: String to encode
+
+    Returns:
+        URL-encoded string
+    """
+    cdef bytes data_b = data.encode("utf-8")
+    cdef size_t src_len = len(data_b)
+    # URL encoding can expand up to 3x (worst case: every byte becomes %XX)
+    cdef size_t buf_len = src_len * 3 + 1
+    cdef char *buf = <char*>malloc(buf_len)
+    cdef size_t result_len
+
+    if buf == NULL:
+        raise MemoryError("Failed to allocate buffer for URL encoding")
+
+    try:
+        result_len = mg_url_encode(data_b, src_len, buf, buf_len)
+        return buf[:result_len].decode("ascii")
+    finally:
+        free(buf)
+
+
+# Multipart form parsing
+def http_parse_multipart(body, offset=0):
+    """Parse the next multipart form part from HTTP body.
+
+    Args:
+        body: HTTP body (str or bytes)
+        offset: Offset to start parsing from
+
+    Returns:
+        Tuple of (next_offset, part_dict) where part_dict contains:
+        - 'name': form field name
+        - 'filename': filename (if file upload)
+        - 'body': part data as bytes
+        Returns (0, None) if no more parts.
+    """
+    cdef bytes body_b
+    if isinstance(body, str):
+        body_b = body.encode("utf-8")
+    else:
+        body_b = bytes(body)
+
+    cdef mg_str body_str = mg_str_n(body_b, len(body_b))
+    cdef mg_http_part part
+    cdef size_t next_offset = mg_http_next_multipart(body_str, offset, &part)
+
+    if next_offset == 0:
+        return (0, None)
+
+    part_dict = {
+        'name': _mg_str_to_text(part.name),
+        'filename': _mg_str_to_text(part.filename),
+        'body': _mg_str_to_bytes(part.body),
+    }
+
+    return (next_offset, part_dict)

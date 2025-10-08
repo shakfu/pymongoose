@@ -1,6 +1,7 @@
 from libc.stdint cimport uintptr_t, int64_t, uint64_t, uint32_t, uint16_t, uint8_t, int8_t
 from libc.stddef cimport size_t
 from libc.stdio cimport FILE
+from libcpp cimport bool as cbool
 
 cdef extern from "mongoose.h":
     ctypedef void (*mg_event_handler_t)(mg_connection *, int ev, void *ev_data)
@@ -184,8 +185,8 @@ cdef extern from "mongoose.h":
     # JSON parsing
     cdef int mg_json_get(mg_str json, const char *path, int *toklen)
     cdef mg_str mg_json_get_tok(mg_str json, const char *path)
-    cdef bint mg_json_get_num(mg_str json, const char *path, double *v)
-    cdef bint mg_json_get_bool(mg_str json, const char *path, bint *v)
+    cdef cbool mg_json_get_num(mg_str json, const char *path, double *v)
+    cdef cbool mg_json_get_bool(mg_str json, const char *path, cbool *v)
     cdef long mg_json_get_long(mg_str json, const char *path, long dflt)
     cdef char *mg_json_get_str(mg_str json, const char *path)
     cdef char *mg_json_get_hex(mg_str json, const char *path, int *len)
@@ -199,3 +200,50 @@ cdef extern from "mongoose.h":
     # Wakeup
     cdef bint mg_wakeup(mg_mgr *mgr, unsigned long id, const void *buf, size_t len)
     cdef bint mg_wakeup_init(mg_mgr *mgr)
+
+    # URL encoding
+    cdef size_t mg_url_encode(const char *s, size_t n, char *buf, size_t len)
+
+    # Multipart forms
+    cdef size_t mg_http_next_multipart(mg_str body, size_t offset, mg_http_part *part)
+
+    # MQTT - Note: 'pass' field renamed to 'password' to avoid Python keyword
+    cdef struct mg_mqtt_opts "mg_mqtt_opts":
+        mg_str user
+        mg_str password "pass"  # Real C name is 'pass'
+        mg_str client_id
+        mg_str topic
+        mg_str message
+        uint8_t qos
+        uint8_t version
+        uint16_t keepalive
+        uint16_t retransmit_id
+        bint retain
+        bint clean
+
+    cdef struct mg_mqtt_message:
+        mg_str topic
+        mg_str data
+        mg_str dgram
+        uint16_t id
+        uint8_t cmd
+        uint8_t qos
+        uint8_t ack
+
+    cdef mg_connection *mg_mqtt_connect(mg_mgr *mgr, const char *url, mg_mqtt_opts *opts, mg_event_handler_t fn, void *fn_data)
+    cdef mg_connection *mg_mqtt_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
+    cdef void mg_mqtt_login(mg_connection *c, mg_mqtt_opts *opts)
+    cdef uint16_t mg_mqtt_pub(mg_connection *c, mg_mqtt_opts *opts)
+    cdef void mg_mqtt_sub(mg_connection *c, mg_mqtt_opts *opts)
+    cdef void mg_mqtt_ping(mg_connection *c)
+    cdef void mg_mqtt_pong(mg_connection *c)
+    cdef void mg_mqtt_disconnect(mg_connection *c, mg_mqtt_opts *opts)
+
+    # Timer API
+    cdef struct mg_timer:
+        pass
+
+    # Timer function pointer type - callback takes void* argument
+    ctypedef void (*mg_timer_fn_t)(void *arg)
+
+    cdef mg_timer *mg_timer_add(mg_mgr *mgr, uint64_t milliseconds, unsigned flags, mg_timer_fn_t fn, void *arg)
