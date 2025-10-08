@@ -27,8 +27,12 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "aiohttp>=3.13.0",
+    "fastapi>=0.118.1",
+    "flask>=3.1.2",
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
+    "uvicorn>=0.37.0",
     "websocket-client>=1.9.0",
 ]
 
