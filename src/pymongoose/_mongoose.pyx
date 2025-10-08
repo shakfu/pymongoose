@@ -629,6 +629,15 @@ cdef class Connection:
         """Send MQTT pong."""
         mg_mqtt_pong(self._ptr())
 
+    def mqtt_disconnect(self):
+        """Send MQTT disconnect message.
+
+        Gracefully disconnects from MQTT broker by sending a DISCONNECT packet.
+        """
+        cdef mg_mqtt_opts opts
+        memset(&opts, 0, sizeof(opts))
+        mg_mqtt_disconnect(self._ptr(), &opts)
+
     def error(self, message: str):
         """Trigger an error event on this connection.
 
@@ -677,6 +686,62 @@ cdef class Connection:
     def is_draining(self):
         """Return True if connection is draining (sending remaining data before close)."""
         return self._conn.is_draining != 0 if self._conn != NULL else False
+
+    @property
+    def recv_len(self):
+        """Return number of bytes in receive buffer."""
+        return self._conn.recv.len if self._conn != NULL else 0
+
+    @property
+    def send_len(self):
+        """Return number of bytes in send buffer."""
+        return self._conn.send.len if self._conn != NULL else 0
+
+    @property
+    def recv_size(self):
+        """Return total allocated size of receive buffer."""
+        return self._conn.recv.size if self._conn != NULL else 0
+
+    @property
+    def send_size(self):
+        """Return total allocated size of send buffer."""
+        return self._conn.send.size if self._conn != NULL else 0
+
+    def recv_data(self, length: int = -1):
+        """Read data from receive buffer without consuming it.
+
+        Args:
+            length: Number of bytes to read, or -1 for all
+
+        Returns:
+            bytes: Data from receive buffer
+        """
+        if self._conn == NULL:
+            return b""
+        cdef size_t read_len = self._conn.recv.len
+        if length >= 0 and <size_t>length < read_len:
+            read_len = <size_t>length
+        if read_len == 0:
+            return b""
+        return (<char*>self._conn.recv.buf)[:read_len]
+
+    def send_data(self, length: int = -1):
+        """Read data from send buffer without consuming it.
+
+        Args:
+            length: Number of bytes to read, or -1 for all
+
+        Returns:
+            bytes: Data from send buffer
+        """
+        if self._conn == NULL:
+            return b""
+        cdef size_t read_len = self._conn.send.len
+        if length >= 0 and <size_t>length < read_len:
+            read_len = <size_t>length
+        if read_len == 0:
+            return b""
+        return (<char*>self._conn.send.buf)[:read_len]
 
     def resolve(self, url: str):
         """Resolve a hostname asynchronously.
@@ -742,6 +807,32 @@ cdef class Connection:
             mg_http_write_chunk(self._ptr(), NULL, 0)
         else:
             mg_http_write_chunk(self._ptr(), chunk_data, len(chunk_data))
+
+    def http_sse(self, event_type: str, data: str):
+        """Send Server-Sent Events (SSE) formatted message.
+
+        SSE is used for real-time server push over HTTP. Must start with appropriate headers.
+
+        Args:
+            event_type: Event type name (e.g., "message", "update")
+            data: Event data payload
+
+        Example:
+            def handler(conn, ev, data):
+                if ev == MG_EV_HTTP_MSG:
+                    # Start SSE stream
+                    conn.reply(200, "", headers={
+                        "Content-Type": "text/event-stream",
+                        "Cache-Control": "no-cache"
+                    })
+                    conn.http_sse("message", "Hello from server")
+                    conn.http_sse("update", "Status: OK")
+        """
+        cdef bytes event_b = event_type.encode("utf-8")
+        cdef bytes data_b = data.encode("utf-8")
+        # SSE format: "event: <type>\ndata: <data>\n\n"
+        cdef bytes sse_msg = b"event: " + event_b + b"\ndata: " + data_b + b"\n\n"
+        mg_http_write_chunk(self._ptr(), sse_msg, len(sse_msg))
 
     def close(self):
         """Schedule closing of the connection."""
