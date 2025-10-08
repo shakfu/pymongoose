@@ -1,3 +1,5 @@
+.DS_STORE
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -204,4 +206,10 @@ cython_debug/
 # Marimo
 marimo/_static/
 marimo/_lsp/
-__marimo__/
+__marimo__
+
+# ai-agents
+.claude
+CLAUDE.md
+AGENTS.md
+GEMINI.md/
