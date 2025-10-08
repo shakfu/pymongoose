@@ -242,6 +242,11 @@ cdef extern from "mongoose.h":
     cdef void mg_mqtt_pong(mg_connection *c)
     cdef void mg_mqtt_disconnect(mg_connection *c, mg_mqtt_opts *opts)
 
+    # SNTP (Simple Network Time Protocol)
+    cdef mg_connection *mg_sntp_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
+    cdef void mg_sntp_request(mg_connection *c)
+    cdef int64_t mg_sntp_parse(const unsigned char *buf, size_t len)
+
     # Timer API
     cdef struct mg_timer:
         pass
@@ -249,4 +254,13 @@ cdef extern from "mongoose.h":
     # Timer function pointer type - callback takes void* argument
     ctypedef void (*mg_timer_fn_t)(void *arg)
 
+    # Timer flags
+    cdef enum:
+        MG_TIMER_ONCE = 0
+        MG_TIMER_REPEAT = 1
+        MG_TIMER_RUN_NOW = 2
+        MG_TIMER_CALLED = 4
+        MG_TIMER_AUTODELETE = 8
+
     cdef mg_timer *mg_timer_add(mg_mgr *mgr, uint64_t milliseconds, unsigned flags, mg_timer_fn_t fn, void *arg)
+    cdef void mg_timer_free(mg_timer **head, mg_timer *timer)

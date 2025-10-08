@@ -8,7 +8,7 @@ embedded networking library.
 from cpython.ref cimport PyObject, Py_INCREF, Py_DECREF
 from cpython.bytes cimport PyBytes_FromStringAndSize
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-from libc.stdint cimport uintptr_t, uint16_t
+from libc.stdint cimport uintptr_t, uint16_t, uint64_t
 from libc.string cimport memset
 from libc.stddef cimport size_t
 from libc.stdlib cimport free, malloc
@@ -46,6 +46,7 @@ from .mongoose cimport (
     MG_EV_MQTT_CMD as C_MG_EV_MQTT_CMD,
     MG_EV_MQTT_MSG as C_MG_EV_MQTT_MSG,
     MG_EV_MQTT_OPEN as C_MG_EV_MQTT_OPEN,
+    MG_EV_SNTP_TIME as C_MG_EV_SNTP_TIME,
     MG_EV_WAKEUP as C_MG_EV_WAKEUP,
     MG_EV_USER as C_MG_EV_USER,
     mg_addr,
@@ -116,9 +117,17 @@ from .mongoose cimport (
     mg_mqtt_ping,
     mg_mqtt_pong,
     mg_mqtt_disconnect,
+    mg_sntp_connect,
+    mg_sntp_request,
+    mg_sntp_parse,
     mg_timer,
     mg_timer_fn_t,
     mg_timer_add,
+    mg_timer_free,
+    MG_TIMER_ONCE,
+    MG_TIMER_REPEAT,
+    MG_TIMER_RUN_NOW,
+    MG_TIMER_AUTODELETE,
     WEBSOCKET_OP_TEXT as C_WEBSOCKET_OP_TEXT,
     WEBSOCKET_OP_BINARY as C_WEBSOCKET_OP_BINARY,
     WEBSOCKET_OP_PING as C_WEBSOCKET_OP_PING,
@@ -151,6 +160,7 @@ __all__ = [
     "MG_EV_MQTT_CMD",
     "MG_EV_MQTT_MSG",
     "MG_EV_MQTT_OPEN",
+    "MG_EV_SNTP_TIME",
     "MG_EV_WAKEUP",
     "MG_EV_USER",
     "WEBSOCKET_OP_TEXT",
@@ -184,6 +194,7 @@ MG_EV_WS_CTL = C_MG_EV_WS_CTL
 MG_EV_MQTT_CMD = C_MG_EV_MQTT_CMD
 MG_EV_MQTT_MSG = C_MG_EV_MQTT_MSG
 MG_EV_MQTT_OPEN = C_MG_EV_MQTT_OPEN
+MG_EV_SNTP_TIME = C_MG_EV_SNTP_TIME
 MG_EV_WAKEUP = C_MG_EV_WAKEUP
 MG_EV_USER = C_MG_EV_USER
 
@@ -695,6 +706,43 @@ cdef class Connection:
         cdef bytes pass_b = password.encode("utf-8")
         mg_http_bauth(self._ptr(), user_b, pass_b)
 
+    def sntp_request(self):
+        """Send an SNTP time request.
+
+        Use on a connection created with Manager.sntp_connect().
+        Triggers MG_EV_SNTP_TIME event when response is received.
+        """
+        mg_sntp_request(self._ptr())
+
+    def http_chunk(self, data):
+        """Send an HTTP chunked transfer encoding chunk.
+
+        Used for streaming HTTP responses. Must call with empty data to end.
+
+        Args:
+            data: Chunk data (str or bytes). Empty to signal end of chunks.
+
+        Example:
+            def handler(conn, ev, data):
+                if ev == MG_EV_HTTP_MSG:
+                    # Start chunked response
+                    conn.reply(200, "", headers={"Transfer-Encoding": "chunked"})
+                    conn.http_chunk("First chunk\\n")
+                    conn.http_chunk("Second chunk\\n")
+                    conn.http_chunk("")  # End chunks
+        """
+        cdef bytes chunk_data
+        if isinstance(data, str):
+            chunk_data = data.encode("utf-8")
+        else:
+            chunk_data = bytes(data)
+
+        if len(chunk_data) == 0:
+            # Empty chunk signals end
+            mg_http_write_chunk(self._ptr(), NULL, 0)
+        else:
+            mg_http_write_chunk(self._ptr(), chunk_data, len(chunk_data))
+
     def close(self):
         """Schedule closing of the connection."""
         if self._conn != NULL:
@@ -791,6 +839,9 @@ cdef class Manager:
         elif ev == MG_EV_WAKEUP and ev_data != NULL:
             wakeup_data = <mg_str*> ev_data
             return _mg_str_to_bytes(wakeup_data[0])
+        elif ev == C_MG_EV_SNTP_TIME and ev_data != NULL:
+            # SNTP provides uint64_t* epoch milliseconds
+            return (<uint64_t*> ev_data)[0]
         return None
 
     def poll(self, int timeout_ms=0):
@@ -889,6 +940,36 @@ cdef class Manager:
         py_conn._handler = handler
         return py_conn
 
+    def sntp_connect(self, url: str, handler=None):
+        """Connect to an SNTP (time) server.
+
+        Triggers MG_EV_SNTP_TIME event when time is received.
+
+        Args:
+            url: SNTP server URL (e.g., 'udp://time.google.com:123')
+            handler: Event handler callback
+
+        Returns:
+            Connection object
+
+        Example:
+            def time_handler(conn, ev, data):
+                if ev == MG_EV_SNTP_TIME:
+                    # data is uint64_t epoch milliseconds
+                    print(f"Time: {data} ms since epoch")
+
+            conn = manager.sntp_connect("udp://time.google.com:123", time_handler)
+            conn.sntp_request()  # Request time
+        """
+        cdef bytes url_b = url.encode("utf-8")
+        cdef mg_connection *conn = mg_sntp_connect(&self._mgr, url_b, _event_bridge, NULL)
+        if conn == NULL:
+            raise RuntimeError(f"Failed to connect to SNTP server '{url}'")
+
+        py_conn = self._ensure_connection(conn)
+        py_conn._handler = handler
+        return py_conn
+
     def wakeup(self, connection_id: int, data: bytes = b""):
         """Send a wakeup notification to a specific connection (thread-safe).
 
@@ -905,6 +986,56 @@ cdef class Manager:
         cdef const void *buf = <const void*><char*>data_b if len(data_b) > 0 else NULL
         cdef size_t len_data = len(data_b)
         return mg_wakeup(&self._mgr, <unsigned long>connection_id, buf, len_data)
+
+    def timer_add(self, milliseconds: int, callback, *, repeat=False, run_now=False):
+        """Add a timer that calls a Python callback periodically.
+
+        Args:
+            milliseconds: Timer interval in milliseconds
+            callback: Python callable (takes no arguments)
+            repeat: If True, timer repeats; if False, runs once
+            run_now: If True, callback is called immediately
+
+        Returns:
+            Timer object
+
+        Example:
+            def heartbeat():
+                print("ping")
+
+            timer = manager.timer_add(1000, heartbeat, repeat=True)
+        """
+        if self._freed:
+            raise RuntimeError("Manager has been freed")
+
+        cdef unsigned flags = MG_TIMER_AUTODELETE
+        if repeat:
+            flags |= MG_TIMER_REPEAT
+        if run_now:
+            flags |= MG_TIMER_RUN_NOW
+
+        # Create Timer wrapper
+        cdef Timer timer = Timer.__new__(Timer)
+
+        # Add timer with callback bridge
+        cdef mg_timer *timer_ptr = mg_timer_add(
+            &self._mgr,
+            <uint64_t>milliseconds,
+            flags,
+            _timer_callback,
+            <void*><PyObject*>callback
+        )
+
+        if timer_ptr == NULL:
+            raise RuntimeError("Failed to add timer")
+
+        # Setup Timer object - call cdef method directly
+        timer._timer = timer_ptr
+        timer._callback = callback
+        timer._callback_ref = <PyObject*>callback
+        Py_INCREF(callback)
+
+        return timer
 
     def close(self):
         """Free the underlying manager and release resources."""
@@ -1121,3 +1252,45 @@ def http_parse_multipart(body, offset=0):
     }
 
     return (next_offset, part_dict)
+
+# Timer callback bridge - called from C, needs to acquire GIL
+cdef void _timer_callback(void *arg) noexcept with gil:
+    """C callback that bridges to Python timer handler."""
+    if arg == NULL:
+        return
+    
+    cdef PyObject *py_callback = <PyObject*> arg
+    try:
+        callback = <object> py_callback
+        callback()
+    except Exception:
+        import traceback
+        traceback.print_exc()
+
+
+cdef class Timer:
+    """Wrapper for Mongoose timer."""
+    cdef mg_timer *_timer
+    cdef object _callback
+    cdef PyObject *_callback_ref
+
+    def __cinit__(self):
+        self._timer = NULL
+        self._callback = None
+        self._callback_ref = NULL
+
+    def __dealloc__(self):
+        # Release callback reference
+        if self._callback_ref != NULL:
+            Py_DECREF(<object>self._callback_ref)
+            self._callback_ref = NULL
+
+    cdef void _set_timer(self, mg_timer *timer, object callback):
+        self._timer = timer
+        self._callback = callback
+        # Keep callback alive
+        self._callback_ref = <PyObject*> callback
+        Py_INCREF(callback)
+
+
+# Add timer_add to Manager class - find the Manager.close() method and add before it
