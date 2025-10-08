@@ -66,7 +66,6 @@ from .mongoose cimport (
     mg_http_get_request_len,
     mg_http_printf_chunk,
     mg_http_write_chunk,
-    mg_http_delete_chunk,
     mg_http_upload,
     mg_json_get,
     mg_json_get_tok,
@@ -142,6 +141,8 @@ __all__ = [
     "HttpMessage",
     "WsMessage",
     "MqttMessage",
+    "TlsOpts",
+    "Timer",
     "MG_EV_ERROR",
     "MG_EV_OPEN",
     "MG_EV_POLL",
@@ -386,6 +387,50 @@ cdef class MqttMessage:
     property ack:
         def __get__(self):
             return self._msg.ack if self._msg != NULL else 0
+
+
+cdef class TlsOpts:
+    """TLS configuration options for secure connections.
+
+    Used to configure TLS/SSL settings for HTTPS, WSS, MQTTS, etc.
+    """
+    cdef public bytes ca
+    cdef public bytes cert
+    cdef public bytes key
+    cdef public bytes name
+    cdef public bint skip_verification
+
+    def __init__(self, ca=None, cert=None, key=None, name=None, skip_verification=False):
+        """Initialize TLS options.
+
+        Args:
+            ca: CA certificate (PEM format) as bytes or str
+            cert: Client certificate (PEM format) as bytes or str
+            key: Private key (PEM format) as bytes or str
+            name: Server name for SNI (Server Name Indication)
+            skip_verification: Skip certificate verification (INSECURE - dev only!)
+
+        Example:
+            # Server with custom certificate
+            opts = TlsOpts(
+                cert=open('server.crt', 'rb').read(),
+                key=open('server.key', 'rb').read()
+            )
+
+            # Client with custom CA
+            opts = TlsOpts(
+                ca=open('ca.crt', 'rb').read(),
+                name='example.com'
+            )
+
+            # Development only - skip verification
+            opts = TlsOpts(skip_verification=True)
+        """
+        self.ca = ca.encode('utf-8') if isinstance(ca, str) else (ca if ca else b'')
+        self.cert = cert.encode('utf-8') if isinstance(cert, str) else (cert if cert else b'')
+        self.key = key.encode('utf-8') if isinstance(key, str) else (key if key else b'')
+        self.name = name.encode('utf-8') if isinstance(name, str) else (name if name else b'')
+        self.skip_verification = skip_verification
 
 
 cdef class Connection:
@@ -688,6 +733,11 @@ cdef class Connection:
         return self._conn.is_draining != 0 if self._conn != NULL else False
 
     @property
+    def is_tls(self):
+        """Return True if connection is using TLS/SSL."""
+        return self._conn.is_tls != 0 if self._conn != NULL else False
+
+    @property
     def recv_len(self):
         """Return number of bytes in receive buffer."""
         return self._conn.recv.len if self._conn != NULL else 0
@@ -838,6 +888,50 @@ cdef class Connection:
         """Schedule closing of the connection."""
         if self._conn != NULL:
             mg_close_conn(self._conn)
+
+    def tls_init(self, TlsOpts opts):
+        """Initialize TLS/SSL on this connection.
+
+        Args:
+            opts: TlsOpts object with certificate, key, CA, etc.
+
+        Example:
+            # HTTPS server with custom certificate
+            opts = TlsOpts(
+                cert=open('server.crt', 'rb').read(),
+                key=open('server.key', 'rb').read()
+            )
+            listener = manager.listen("https://0.0.0.0:443")
+            listener.tls_init(opts)
+
+            # HTTPS client with custom CA
+            opts = TlsOpts(ca=open('custom-ca.crt', 'rb').read())
+            conn = manager.connect("https://example.com")
+            conn.tls_init(opts)
+        """
+        cdef mg_tls_opts c_opts
+        memset(&c_opts, 0, sizeof(c_opts))
+
+        # Set certificate fields
+        if len(opts.ca) > 0:
+            c_opts.ca = mg_str_n(opts.ca, len(opts.ca))
+        if len(opts.cert) > 0:
+            c_opts.cert = mg_str_n(opts.cert, len(opts.cert))
+        if len(opts.key) > 0:
+            c_opts.key = mg_str_n(opts.key, len(opts.key))
+        if len(opts.name) > 0:
+            c_opts.name = mg_str_n(opts.name, len(opts.name))
+
+        c_opts.skip_verification = 1 if opts.skip_verification else 0
+
+        mg_tls_init(self._ptr(), &c_opts)
+
+    def tls_free(self):
+        """Free TLS/SSL resources on this connection.
+
+        Typically not needed as TLS is automatically freed when connection closes.
+        """
+        mg_tls_free(self._ptr())
 
     def __repr__(self):
         if self._conn == NULL:

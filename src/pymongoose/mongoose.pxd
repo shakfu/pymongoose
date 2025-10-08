@@ -141,7 +141,6 @@ cdef extern from "mongoose.h":
     cdef int mg_http_get_request_len(const unsigned char *buf, size_t buf_len)
     cdef void mg_http_printf_chunk(mg_connection *cnn, const char *fmt, ...)
     cdef void mg_http_write_chunk(mg_connection *c, const char *buf, size_t len)
-    cdef void mg_http_delete_chunk(mg_connection *c, mg_http_message *hm)
     cdef void mg_http_creds(mg_http_message *hm, char *user, size_t user_len, char *_pass, size_t pass_len)
     cdef long mg_http_upload(mg_connection *c, mg_http_message *hm, mg_fs *fs, const char *dir, size_t max_size)
     cdef void mg_http_bauth(mg_connection *c, const char *user, const char *_pass)
