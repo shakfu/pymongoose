@@ -279,7 +279,10 @@ cdef class HttpMessage:
         return result
 
     def query_var(self, name: str):
-        """Extract a query string parameter."""
+        """Extract a query string parameter.
+
+        Note: Parameter values are limited to 256 bytes. Longer values will be truncated.
+        """
         if self._msg == NULL:
             return None
         cdef bytes name_b = name.encode("utf-8")
@@ -569,6 +572,7 @@ cdef class Connection:
         else:
             header_lines = [f"{k}: {v}\r\n" for k, v in headers.items()]
         headers_bytes = "".join(header_lines).encode("utf-8")
+        # Keep Python bytes objects alive during nogil C call - pointers reference their buffers
         cdef bytes headers_b = headers_bytes
         cdef bytes body_b = body_bytes
         cdef const char *headers_c = headers_b if headers_b else b""
@@ -584,6 +588,7 @@ cdef class Connection:
             raise ValueError("HttpMessage is not valid for this event")
         cdef mg_http_serve_opts opts
         memset(&opts, 0, sizeof(mg_http_serve_opts))
+        # Keep Python bytes objects alive - opts struct contains pointers to their buffers
         cdef bytes root_b = root_dir.encode("utf-8")
         opts.root_dir = root_b
         cdef bytes extra_headers_b
@@ -609,6 +614,7 @@ cdef class Connection:
             raise ValueError("HttpMessage is not valid for this event")
         cdef mg_http_serve_opts opts
         memset(&opts, 0, sizeof(mg_http_serve_opts))
+        # Keep Python bytes objects alive - path_b and opts struct pointers reference their buffers
         cdef bytes path_b = path.encode("utf-8")
         cdef bytes extra_headers_b
         cdef bytes mime_types_b
@@ -637,6 +643,7 @@ cdef class Connection:
         cdef bytes headers_b
         if extra_headers:
             headers_str = "\r\n".join(f"{k}: {v}" for k, v in extra_headers.items())
+            # Keep Python bytes object alive - fmt pointer references its buffer
             headers_b = headers_str.encode("utf-8")
             fmt = headers_b
 
@@ -1103,7 +1110,11 @@ cdef class Manager:
         return None
 
     def poll(self, int timeout_ms=0):
-        """Drive the event loop once."""
+        """Drive the event loop once.
+
+        Thread safety note: _freed flag is checked without lock. In multi-threaded scenarios,
+        use close() only after all polling threads have stopped to avoid race conditions.
+        """
         if self._freed:
             raise RuntimeError("Manager has been freed")
         with nogil:
@@ -1237,6 +1248,9 @@ cdef class Manager:
 
         Returns:
             True if wakeup was sent successfully
+
+        Thread safety note: _freed flag is checked without lock. In multi-threaded scenarios,
+        use close() only after all polling threads have stopped to avoid race conditions.
         """
         if self._freed:
             raise RuntimeError("Manager has been freed")
@@ -1260,6 +1274,9 @@ cdef class Manager:
 
         Returns:
             Timer object
+
+        Note: Timers are automatically freed when they complete (MG_TIMER_AUTODELETE flag).
+        The Timer object's __dealloc__ only releases the Python callback reference.
 
         Example:
             def heartbeat():
@@ -1531,7 +1548,11 @@ cdef void _timer_callback(void *arg) noexcept with gil:
 
 
 cdef class Timer:
-    """Wrapper for Mongoose timer."""
+    """Wrapper for Mongoose timer.
+
+    Note: The underlying mg_timer is automatically freed by Mongoose when it completes
+    (via MG_TIMER_AUTODELETE flag). This class only manages the Python callback reference.
+    """
     cdef mg_timer *_timer
     cdef object _callback
     cdef PyObject *_callback_ref
@@ -1542,7 +1563,7 @@ cdef class Timer:
         self._callback_ref = NULL
 
     def __dealloc__(self):
-        # Release callback reference
+        # Release callback reference (mg_timer is auto-freed by Mongoose)
         if self._callback_ref != NULL:
             Py_DECREF(<object>self._callback_ref)
             self._callback_ref = NULL

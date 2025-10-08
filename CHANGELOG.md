@@ -15,6 +15,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Performance Optimization**: GIL (Global Interpreter Lock) management for multi-threaded scenarios
+  - Added `nogil` to 21 critical C API methods for true parallel execution
+  - Network operations: `send()`, `close()`, `resolve()`, `resolve_cancel()`
+  - WebSocket: `ws_send()`, `ws_upgrade()`
+  - MQTT: `mqtt_pub()`, `mqtt_sub()`, `mqtt_ping()`, `mqtt_pong()`, `mqtt_disconnect()`
+  - HTTP: `reply()`, `serve_dir()`, `serve_file()`, `http_chunk()`, `http_sse()`
+  - TLS: `tls_init()`, `tls_free()`
+  - Utilities: `sntp_request()`, `http_basic_auth()`, `error()`
+  - Properties: `local_addr`, `remote_addr` (with `ntohs()`)
+  - Thread-safe: `Manager.wakeup()`
+  - **Impact**: Enables true parallel request processing in multi-threaded servers, reduces GIL contention
+
+### Changed
+- **Documentation improvements**:
+  - Added buffer size limitation note to `HttpMessage.query_var()` (256-byte limit)
+  - Added memory lifetime comments for encode() patterns with nogil
+  - Added thread safety notes to `Manager.poll()` and `Manager.wakeup()`
+  - Documented timer auto-deletion design in `Manager.timer_add()` and `Timer` class
+  - Created `docs/code_nogil_review.md` - comprehensive code review report
+  - Created `docs/nogil_optimization_summary.md` - implementation summary
+
+### Fixed
+- **Duplicate property**: Removed duplicate `is_tls` property definition (line 736)
+  - Previously defined twice, second definition silently overwrote the first
+
 ## [0.1.1]
 
 ### Added

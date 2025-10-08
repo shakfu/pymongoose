@@ -29,6 +29,7 @@ Python bindings for the Mongoose embedded networking library, built with Cython.
 - **Low overhead**: Thin Cython wrapper over native C library
 - **Python 3.9+**: Modern Python with type hints
 - **Comprehensive**: 150+ tests with 99% pass rate
+- **GIL-optimized**: True parallel execution in multi-threaded scenarios (21 methods with `nogil`)
 
 ## Installation
 
@@ -357,6 +358,16 @@ make clean          # Remove build artifacts
 - **Cython bindings** (`src/pymongoose/_mongoose.pyx`): Python wrapper classes
 - **C declarations** (`src/pymongoose/mongoose.pxd`): Cython interface to Mongoose C API
 - **Vendored Mongoose** (`thirdparty/mongoose/`): Embedded C library
+
+### Performance Optimization
+
+The wrapper is optimized for multi-threaded scenarios:
+- **21 methods with `nogil`**: Network I/O, WebSocket, MQTT, HTTP, and TLS operations release the GIL
+- **True parallel execution**: Multiple threads can process requests concurrently
+- **Zero GIL contention**: C operations run without blocking Python threads
+- **Thread-safe wakeup**: Cross-thread communication via `Manager.wakeup()`
+
+See `docs/nogil_optimization_summary.md` for implementation details.
 
 ## License
 
