@@ -102,7 +102,10 @@ from .mongoose cimport (
     mg_http_part,
     mg_http_status,
     mg_http_get_header_var,
+    mg_http_bauth,
     mg_error,
+    mg_resolve,
+    mg_resolve_cancel,
     mg_mqtt_opts,
     mg_mqtt_message,
     mg_mqtt_connect,
@@ -653,6 +656,44 @@ cdef class Connection:
     def is_writable(self):
         """Return True if connection can be written to."""
         return self._conn.is_writable != 0 if self._conn != NULL else False
+
+    @property
+    def is_full(self):
+        """Return True if receive buffer is full (backpressure - stop reads)."""
+        return self._conn.is_full != 0 if self._conn != NULL else False
+
+    @property
+    def is_draining(self):
+        """Return True if connection is draining (sending remaining data before close)."""
+        return self._conn.is_draining != 0 if self._conn != NULL else False
+
+    def resolve(self, url: str):
+        """Resolve a hostname asynchronously.
+
+        Triggers MG_EV_RESOLVE event when DNS lookup completes.
+
+        Args:
+            url: URL to resolve (e.g., "google.com" or "tcp://example.com:80")
+        """
+        cdef bytes url_b = url.encode("utf-8")
+        mg_resolve(self._ptr(), url_b)
+
+    def resolve_cancel(self):
+        """Cancel an ongoing DNS resolution."""
+        mg_resolve_cancel(self._ptr())
+
+    def http_basic_auth(self, username: str, password: str):
+        """Send HTTP Basic Authentication credentials.
+
+        Typically used on client connections to authenticate with a server.
+
+        Args:
+            username: Username for basic auth
+            password: Password for basic auth
+        """
+        cdef bytes user_b = username.encode("utf-8")
+        cdef bytes pass_b = password.encode("utf-8")
+        mg_http_bauth(self._ptr(), user_b, pass_b)
 
     def close(self):
         """Schedule closing of the connection."""

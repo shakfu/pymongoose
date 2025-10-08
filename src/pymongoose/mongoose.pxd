@@ -127,6 +127,8 @@ cdef extern from "mongoose.h":
     cdef size_t mg_printf(mg_connection *conn, const char *fmt, ...)
     cdef void mg_close_conn(mg_connection *conn)
     cdef void mg_error(mg_connection *c, const char *fmt, ...)
+    cdef void mg_resolve(mg_connection *c, const char *url)
+    cdef void mg_resolve_cancel(mg_connection *c)
 
     cdef mg_connection *mg_http_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
     cdef mg_connection *mg_http_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
