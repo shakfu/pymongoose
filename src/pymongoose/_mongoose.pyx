@@ -6,9 +6,10 @@ embedded networking library.
 """
 
 # USE_NOGIL compile-time constant set via setup.py compile_time_env
-# When 1: nogil is used for parallel execution (TLS must be disabled)
-# When 0: GIL is held for safety (required when TLS is enabled)
-# Configured in setup.py: USE_NOGIL = not use_tls
+# When 1: nogil is used for parallel execution (releases GIL for C calls)
+# When 0: GIL is held for all C calls
+# Configured in setup.py: USE_NOGIL = use_nogil
+# NOTE: Mongoose's built-in TLS is event-loop based with no locks, so nogil is safe with TLS
 IF USE_NOGIL:
     print("USE_NOGIL=1")
 ELSE:

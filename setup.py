@@ -28,20 +28,20 @@ def build_extensions():
 
     # TLS configuration
     # MG_TLS_BUILTIN enables built-in TLS (no external deps)
-    # MG_TLS_NONE disables TLS but allows nogil optimization
-    use_tls = True  # Change to False to disable TLS and enable nogil
+    use_tls = True  # Enable TLS support
+    # NOTE: Mongoose's built-in TLS is event-loop based with no internal locks,
+    # so nogil should be safe even with TLS enabled
+    use_nogil = True  # Enable nogil for parallel execution
 
     if use_tls:
         define_macros = [
             ("MG_TLS", "MG_TLS_BUILTIN"),  # Enable built-in TLS support
             ("MG_ENABLE_PACKED_FS", "0"),  # Disable packed filesystem (not needed)
-            # ("USE_NOGIL", "0"),            # Disable nogil (TLS uses internal locks)
         ]
     else:
         define_macros = [
             ("MG_TLS", "MG_TLS_NONE"),     # Disable TLS
             ("MG_ENABLE_PACKED_FS", "0"),  # Disable packed filesystem (not needed)
-            # ("USE_NOGIL", "1"),            # Enable nogil for parallel execution
         ]
 
     if sys.platform == "darwin":
@@ -81,7 +81,7 @@ def build_extensions():
             "embedsignature": True,
         },
         compile_time_env={
-            "USE_NOGIL": not use_tls,
+            "USE_NOGIL": use_nogil,
         },
         # Build in parallel if possible
         nthreads=os.cpu_count() or 1,
