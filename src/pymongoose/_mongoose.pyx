@@ -100,6 +100,9 @@ from .mongoose cimport (
     mg_url_encode,
     mg_http_next_multipart,
     mg_http_part,
+    mg_http_status,
+    mg_http_get_header_var,
+    mg_error,
     mg_mqtt_opts,
     mg_mqtt_message,
     mg_mqtt_connect,
@@ -270,6 +273,47 @@ cdef class HttpMessage:
         if rc <= 0:
             return None
         return buffer[:rc].decode("utf-8", "surrogateescape")
+
+    def status(self):
+        """Return HTTP status code from response message.
+
+        Returns:
+            int: Status code (e.g., 200, 404) or None if not available
+        """
+        if self._msg == NULL:
+            return None
+        return mg_http_status(self._msg)
+
+    def header_var(self, header_name: str, var_name: str):
+        """Parse a variable from a header value.
+
+        Useful for parsing sub-values like charset from Content-Type header.
+        Example: header_var("Content-Type", "charset") -> "utf-8"
+
+        Args:
+            header_name: Name of the header (e.g., "Content-Type")
+            var_name: Name of the variable to extract (e.g., "charset")
+
+        Returns:
+            str: The variable value or None if not found
+        """
+        if self._msg == NULL:
+            return None
+
+        # Get the header value first
+        cdef bytes header_name_b = header_name.encode("utf-8")
+        cdef mg_str *header_value = mg_http_get_header(self._msg, header_name_b)
+        if header_value == NULL:
+            return None
+
+        # Parse variable from header value
+        cdef bytes var_name_b = var_name.encode("utf-8")
+        cdef mg_str var_value_str = mg_http_get_header_var(header_value[0], mg_str_n(var_name_b, len(var_name_b)))
+
+        if var_value_str.buf == NULL or var_value_str.len == 0:
+            return None
+
+        return _mg_str_to_text(var_value_str)
 
 
 cdef class WsMessage:
@@ -570,6 +614,45 @@ cdef class Connection:
     def mqtt_pong(self):
         """Send MQTT pong."""
         mg_mqtt_pong(self._ptr())
+
+    def error(self, message: str):
+        """Trigger an error event on this connection.
+
+        Args:
+            message: Error message
+        """
+        cdef bytes msg_b = message.encode("utf-8")
+        mg_error(self._ptr(), b"%s", <char*>msg_b)
+
+    @property
+    def is_client(self):
+        """Return True if this is a client connection."""
+        return self._conn.is_client != 0 if self._conn != NULL else False
+
+    @property
+    def is_tls(self):
+        """Return True if this connection uses TLS."""
+        return self._conn.is_tls != 0 if self._conn != NULL else False
+
+    @property
+    def is_udp(self):
+        """Return True if this is a UDP connection."""
+        return self._conn.is_udp != 0 if self._conn != NULL else False
+
+    @property
+    def is_websocket(self):
+        """Return True if this is a WebSocket connection."""
+        return self._conn.is_websocket != 0 if self._conn != NULL else False
+
+    @property
+    def is_readable(self):
+        """Return True if connection has data to read."""
+        return self._conn.is_readable != 0 if self._conn != NULL else False
+
+    @property
+    def is_writable(self):
+        """Return True if connection can be written to."""
+        return self._conn.is_writable != 0 if self._conn != NULL else False
 
     def close(self):
         """Schedule closing of the connection."""

@@ -126,6 +126,7 @@ cdef extern from "mongoose.h":
     cdef bint mg_send(mg_connection *conn, const void *buf, size_t len)
     cdef size_t mg_printf(mg_connection *conn, const char *fmt, ...)
     cdef void mg_close_conn(mg_connection *conn)
+    cdef void mg_error(mg_connection *c, const char *fmt, ...)
 
     cdef mg_connection *mg_http_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
     cdef mg_connection *mg_http_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
@@ -142,10 +143,10 @@ cdef extern from "mongoose.h":
     cdef void mg_http_creds(mg_http_message *hm, char *user, size_t user_len, char *_pass, size_t pass_len)
     cdef long mg_http_upload(mg_connection *c, mg_http_message *hm, mg_fs *fs, const char *dir, size_t max_size)
     cdef void mg_http_bauth(mg_connection *c, const char *user, const char *_pass)
-    cdef mg_str mg_http_get_header_var(mg_str s, mg_str v)
     cdef size_t mg_http_next_multipart(mg_str buf, size_t ofs, mg_http_part *part)
-    cdef int mg_http_status(const mg_http_message *hm)
     cdef void mg_http_serve_ssi(mg_connection *c, const char *root, const char *fullpath)
+    cdef mg_str mg_http_get_header_var(mg_str s, mg_str v)
+    cdef int mg_http_status(mg_http_message *hm)
 
     cdef mg_connection *mg_ws_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data, const char *fmt, ...)
     cdef void mg_ws_upgrade(mg_connection *conn, mg_http_message *hm, const char *fmt, ...)
