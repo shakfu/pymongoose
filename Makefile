@@ -48,7 +48,8 @@ clean:
 	rm -rf build
 
 test:
-	PYTHONPATH=$(ROOT)/src pytest tests/ -v
+	@uv run pytest -v
+# 	PYTHONPATH=src uv run pytest tests/ --tb=no -q
 
 
 snap:

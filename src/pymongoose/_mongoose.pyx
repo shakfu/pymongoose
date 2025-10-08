@@ -62,6 +62,7 @@ from .mongoose cimport (
     mg_ws_message,
     mg_ws_send,
     mg_ws_printf,
+    mg_ws_upgrade,
     mg_tls_opts,
     mg_tls_init,
     mg_tls_free,
@@ -331,6 +332,24 @@ cdef class Connection:
             opts.page404 = page404_b
         mg_http_serve_dir(self._ptr(), message._msg, &opts)
 
+    def ws_upgrade(self, HttpMessage message, extra_headers=None):
+        """Upgrade HTTP connection to WebSocket.
+
+        Args:
+            message: The HttpMessage from MG_EV_HTTP_MSG event
+            extra_headers: Optional dict of extra headers to send in upgrade response
+        """
+        if message._msg == NULL:
+            raise ValueError("HttpMessage is not valid for this event")
+
+        cdef const char *fmt = NULL
+        if extra_headers:
+            headers_str = "\r\n".join(f"{k}: {v}" for k, v in extra_headers.items())
+            headers_bytes = headers_str.encode("utf-8")
+            fmt = headers_bytes
+
+        mg_ws_upgrade(self._ptr(), message._msg, fmt)
+
     def ws_send(self, data, op=WEBSOCKET_OP_TEXT):
         """Send a WebSocket frame."""
         if isinstance(data, str):
@@ -466,7 +485,7 @@ cdef class Manager:
             self._mgr.userdata = NULL
 
 
-cdef void _event_bridge(mg_connection *conn, int ev, void *ev_data) noexcept:
+cdef void _event_bridge(mg_connection *conn, int ev, void *ev_data) noexcept with gil:
     """Global callback that routes events back into Python."""
     cdef Manager manager
     cdef PyObject *manager_obj = NULL

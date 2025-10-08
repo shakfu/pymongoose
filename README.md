@@ -2,13 +2,6 @@
 
 Python bindings for the Mongoose embedded networking library, built with Cython.
 
-## CRITICAL TODO
-
-- FIX: segfaults with the basis http server examples below
-    16605b0c 3 mongoose.c:4152:mg_mgr_init  MG_IO_SIZE: 16384, TLS: none
-    16605b0c 3 mongoose.c:4063:mg_listen    1 5 http://0.0.0.0:8000
-    zsh: segmentation fault  ipython -i
-
 ## Overview
 
 **pymongoose** provides Pythonic access to [Mongoose](https://github.com/cesanta/mongoose), a lightweight embedded networking library written in C. It supports HTTP servers, WebSocket, TCP/UDP sockets, and more through a clean, event-driven API.
@@ -81,10 +74,12 @@ while True:
 ### WebSocket Echo Server
 
 ```python
-from pymongoose import Manager, MG_EV_WS_MSG
+from pymongoose import Manager, MG_EV_HTTP_MSG, MG_EV_WS_MSG
 
 def handler(conn, event, data):
-    if event == MG_EV_WS_MSG:
+    if event == MG_EV_HTTP_MSG:
+        conn.ws_upgrade(data)  # Upgrade HTTP to WebSocket
+    elif event == MG_EV_WS_MSG:
         conn.ws_send(data.text)  # Echo back
 
 mgr = Manager(handler)
@@ -117,6 +112,7 @@ Represents a network connection.
 # Send data
 conn.send(data)                    # Raw bytes
 conn.reply(status, body, headers)  # HTTP response
+conn.ws_upgrade(message)           # Upgrade HTTP to WebSocket
 conn.ws_send(data, op)             # WebSocket frame
 
 # Properties
@@ -170,6 +166,23 @@ MG_EV_WS_OPEN     # WebSocket handshake complete
 MG_EV_WS_MSG      # WebSocket message received
 ```
 
+## Testing
+
+The project includes a comprehensive test suite with 35 tests covering:
+- HTTP server functionality (15 tests)
+- WebSocket support (10 tests)
+- Connection lifecycle and properties
+- Custom headers and query parameters
+- Event handling and callbacks
+- Error handling and exception safety
+
+```bash
+make test                        # Run HTTP tests
+PYTHONPATH=src uv run pytest tests/ -v  # Run all tests including WebSocket
+```
+
+WebSocket tests require `websocket-client` (install via `uv add --dev websocket-client`). All tests use dynamic port allocation to avoid conflicts and can run concurrently.
+
 ## Development
 
 ### Build
@@ -177,12 +190,17 @@ MG_EV_WS_MSG      # WebSocket message received
 ```bash
 make build          # Build with CMake
 make build CONFIG=Debug UNIVERSAL=1  # Debug build, universal binary (macOS)
+
+# Force rebuild
+uv pip install -e . --force-reinstall --no-deps
 ```
 
 ### Test
 
 ```bash
-make test           # Run pytest
+make test                    # Run all tests
+pytest tests/ -v             # Verbose output
+pytest tests/test_http_server.py -v  # Run specific test file
 ```
 
 ### Clean
