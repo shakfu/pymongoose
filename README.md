@@ -29,7 +29,8 @@ Python bindings for the Mongoose embedded networking library, built with Cython.
 - **Low overhead**: Thin Cython wrapper over native C library
 - **Python 3.9+**: Modern Python with type hints
 - **Comprehensive**: 150+ tests with 99% pass rate
-- **GIL-optimized**: True parallel execution in multi-threaded scenarios (21 methods with `nogil`)
+- **TLS Support**: Built-in TLS/SSL encryption (MG_TLS_BUILTIN)
+- **GIL Management**: Conditional `nogil` support (automatically disabled when TLS is enabled)
 
 ## Installation
 

@@ -38,11 +38,7 @@ ZIP = $(DIST_NAME).zip
 all: build
 
 build:
-	@mkdir -p build && \
-		cd build && \
-		cmake $(GENERATOR) .. $(EXTRA_OPTIONS) && \
-		cmake --build . --config '$(CONFIG)' && \
-		cmake --install . --config '$(CONFIG)'
+	@uv sync
 
 clean:
 	rm -rf build
