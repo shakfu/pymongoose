@@ -7,6 +7,9 @@ cdef extern from "mongoose.h":
 
     cdef enum:
         MG_MAX_HTTP_HEADERS = 30
+        MG_PATH_MAX = 255
+        MG_IO_SIZE = 16384
+
 
     cdef enum:
         MG_EV_ERROR
@@ -177,3 +180,22 @@ cdef extern from "mongoose.h":
         mg_str body
 
     cdef mg_str mg_str_n(const char *s, size_t n)
+
+    # JSON parsing
+    cdef int mg_json_get(mg_str json, const char *path, int *toklen)
+    cdef mg_str mg_json_get_tok(mg_str json, const char *path)
+    cdef bint mg_json_get_num(mg_str json, const char *path, double *v)
+    cdef bint mg_json_get_bool(mg_str json, const char *path, bint *v)
+    cdef long mg_json_get_long(mg_str json, const char *path, long dflt)
+    cdef char *mg_json_get_str(mg_str json, const char *path)
+    cdef char *mg_json_get_hex(mg_str json, const char *path, int *len)
+    cdef char *mg_json_get_b64(mg_str json, const char *path, int *len)
+    cdef bint mg_json_unescape(mg_str str, char *buf, size_t len)
+    cdef size_t mg_json_next(mg_str obj, size_t ofs, mg_str *key, mg_str *val)
+
+    # Additional HTTP functions
+    cdef void mg_http_serve_file(mg_connection *conn, mg_http_message *hm, const char *path, mg_http_serve_opts *opts)
+
+    # Wakeup
+    cdef bint mg_wakeup(mg_mgr *mgr, unsigned long id, const void *buf, size_t len)
+    cdef bint mg_wakeup_init(mg_mgr *mgr)

@@ -8,10 +8,23 @@ embedded networking library.
 from cpython.ref cimport PyObject, Py_INCREF, Py_DECREF
 from cpython.bytes cimport PyBytes_FromStringAndSize
 from cpython.unicode cimport PyUnicode_DecodeUTF8
-from libc.stdint cimport uintptr_t
+from libc.stdint cimport uintptr_t, uint16_t
 from libc.string cimport memset
 from libc.stddef cimport size_t
+from libc.stdlib cimport free
 from cython cimport sizeof
+
+cdef extern from *:
+    """
+    #ifdef __APPLE__
+    #include <machine/endian.h>
+    #include <libkern/OSByteOrder.h>
+    #define ntohs(x) OSSwapBigToHostInt16(x)
+    #else
+    #include <arpa/inet.h>
+    #endif
+    """
+    uint16_t ntohs(uint16_t netshort) nogil
 
 from .mongoose cimport (
     MG_EV_ERROR as C_MG_EV_ERROR,
@@ -40,6 +53,7 @@ from .mongoose cimport (
     mg_http_connect,
     mg_http_reply,
     mg_http_serve_dir,
+    mg_http_serve_file,
     mg_http_serve_opts,
     mg_http_get_header,
     mg_http_get_var,
@@ -49,6 +63,16 @@ from .mongoose cimport (
     mg_http_write_chunk,
     mg_http_delete_chunk,
     mg_http_upload,
+    mg_json_get,
+    mg_json_get_tok,
+    mg_json_get_num,
+    mg_json_get_bool,
+    mg_json_get_long,
+    mg_json_get_str,
+    mg_json_get_hex,
+    mg_json_get_b64,
+    mg_json_unescape,
+    mg_json_next,
     mg_mgr,
     mg_mgr_init,
     mg_mgr_poll,
@@ -59,6 +83,7 @@ from .mongoose cimport (
     mg_printf,
     mg_close_conn,
     mg_str,
+    mg_str_n,
     mg_ws_message,
     mg_ws_send,
     mg_ws_printf,
@@ -66,6 +91,8 @@ from .mongoose cimport (
     mg_tls_opts,
     mg_tls_init,
     mg_tls_free,
+    mg_wakeup,
+    mg_wakeup_init,
     WEBSOCKET_OP_TEXT as C_WEBSOCKET_OP_TEXT,
     WEBSOCKET_OP_BINARY as C_WEBSOCKET_OP_BINARY,
     WEBSOCKET_OP_PING as C_WEBSOCKET_OP_PING,
@@ -100,6 +127,11 @@ __all__ = [
     "WEBSOCKET_OP_BINARY",
     "WEBSOCKET_OP_PING",
     "WEBSOCKET_OP_PONG",
+    "json_get",
+    "json_get_num",
+    "json_get_bool",
+    "json_get_long",
+    "json_get_str",
 ]
 
 MG_EV_ERROR = C_MG_EV_ERROR
@@ -273,12 +305,55 @@ cdef class Connection:
         self._userdata = value
 
     @property
+    def id(self):
+        """Return connection ID."""
+        return self._conn.id if self._conn != NULL else 0
+
+    @property
     def is_listening(self):
         return self._conn.is_listening != 0 if self._conn != NULL else False
 
     @property
     def is_closing(self):
         return self._conn.is_closing != 0 if self._conn != NULL else True
+
+    @property
+    def local_addr(self):
+        """Return local address as (ip, port, is_ipv6) tuple."""
+        if self._conn == NULL:
+            return None
+        cdef mg_addr addr = self._conn.loc
+        cdef bytes ip_bytes = bytes(addr.ip[:16])
+        cdef uint16_t host_port = ntohs(addr.port)
+        if addr.is_ip6:
+            # IPv6 address formatting
+            parts = []
+            for i in range(8):
+                parts.append(f"{addr.ip[i*2]:02x}{addr.ip[i*2+1]:02x}")
+            ip_str = ":".join(parts)
+        else:
+            # IPv4 address
+            ip_str = f"{addr.ip[0]}.{addr.ip[1]}.{addr.ip[2]}.{addr.ip[3]}"
+        return (ip_str, host_port, bool(addr.is_ip6))
+
+    @property
+    def remote_addr(self):
+        """Return remote address as (ip, port, is_ipv6) tuple."""
+        if self._conn == NULL:
+            return None
+        cdef mg_addr addr = self._conn.rem
+        cdef bytes ip_bytes = bytes(addr.ip[:16])
+        cdef uint16_t host_port = ntohs(addr.port)
+        if addr.is_ip6:
+            # IPv6 address formatting
+            parts = []
+            for i in range(8):
+                parts.append(f"{addr.ip[i*2]:02x}{addr.ip[i*2+1]:02x}")
+            ip_str = ":".join(parts)
+        else:
+            # IPv4 address
+            ip_str = f"{addr.ip[0]}.{addr.ip[1]}.{addr.ip[2]}.{addr.ip[3]}"
+        return (ip_str, host_port, bool(addr.is_ip6))
 
     def send(self, data):
         """Send raw bytes to the peer."""
@@ -332,6 +407,23 @@ cdef class Connection:
             opts.page404 = page404_b
         mg_http_serve_dir(self._ptr(), message._msg, &opts)
 
+    def serve_file(self, HttpMessage message, path: str, extra_headers: str = "", mime_types: str = ""):
+        """Serve a single file using Mongoose's built-in static handler."""
+        if message._msg == NULL:
+            raise ValueError("HttpMessage is not valid for this event")
+        cdef mg_http_serve_opts opts
+        memset(&opts, 0, sizeof(mg_http_serve_opts))
+        cdef bytes path_b = path.encode("utf-8")
+        extra_headers_b = None
+        mime_types_b = None
+        if extra_headers:
+            extra_headers_b = extra_headers.encode("utf-8")
+            opts.extra_headers = extra_headers_b
+        if mime_types:
+            mime_types_b = mime_types.encode("utf-8")
+            opts.mime_types = mime_types_b
+        mg_http_serve_file(self._ptr(), message._msg, path_b, &opts)
+
     def ws_upgrade(self, HttpMessage message, extra_headers=None):
         """Upgrade HTTP connection to WebSocket.
 
@@ -380,7 +472,7 @@ cdef class Manager:
     cdef PyObject *_self_ref
     cdef bint _freed
 
-    def __cinit__(self, handler=None):
+    def __cinit__(self, handler=None, enable_wakeup=False):
         self._default_handler = handler
         self._connections = {}
         self._self_ref = <PyObject*> self
@@ -388,6 +480,9 @@ cdef class Manager:
         mg_mgr_init(&self._mgr)
         self._mgr.userdata = <void*> self
         self._freed = False
+        if enable_wakeup:
+            if not mg_wakeup_init(&self._mgr):
+                raise RuntimeError("Failed to initialize wakeup support")
 
     def __dealloc__(self):
         if not self._freed:
@@ -425,6 +520,7 @@ cdef class Manager:
     cdef object _wrap_event_data(self, int ev, void *ev_data):
         cdef HttpMessage view
         cdef WsMessage ws
+        cdef mg_str *wakeup_data
         if ev == MG_EV_HTTP_MSG or ev == MG_EV_HTTP_HDRS or ev == MG_EV_WS_OPEN:
             if ev_data != NULL:
                 view = HttpMessage.__new__(HttpMessage)
@@ -439,6 +535,9 @@ cdef class Manager:
             return None
         elif ev == MG_EV_ERROR and ev_data != NULL:
             return (<char*> ev_data).decode("utf-8", "ignore")
+        elif ev == MG_EV_WAKEUP and ev_data != NULL:
+            wakeup_data = <mg_str*> ev_data
+            return _mg_str_to_bytes(wakeup_data[0])
         return None
 
     def poll(self, int timeout_ms=0):
@@ -476,6 +575,23 @@ cdef class Manager:
         py_conn._handler = handler
         return py_conn
 
+    def wakeup(self, connection_id: int, data: bytes = b""):
+        """Send a wakeup notification to a specific connection (thread-safe).
+
+        Args:
+            connection_id: The connection ID to wake up
+            data: Optional data payload (delivered via MG_EV_WAKEUP event)
+
+        Returns:
+            True if wakeup was sent successfully
+        """
+        if self._freed:
+            raise RuntimeError("Manager has been freed")
+        cdef bytes data_b = data
+        cdef const void *buf = <const void*><char*>data_b if len(data_b) > 0 else NULL
+        cdef size_t len_data = len(data_b)
+        return mg_wakeup(&self._mgr, <unsigned long>connection_id, buf, len_data)
+
     def close(self):
         """Free the underlying manager and release resources."""
         if not self._freed:
@@ -507,3 +623,123 @@ cdef void _event_bridge(mg_connection *conn, int ev, void *ev_data) noexcept wit
         traceback.print_exc()
     if ev == MG_EV_CLOSE:
         manager._drop_connection(conn)
+
+
+# JSON utilities
+def json_get(data, path: str):
+    """Extract a value from JSON by path (e.g., '$.user.name').
+
+    Args:
+        data: JSON string or bytes
+        path: JSON path (e.g., '$.items[0].id')
+
+    Returns:
+        String value at path, or None if not found
+    """
+    cdef bytes json_b
+    if isinstance(data, str):
+        json_b = data.encode("utf-8")
+    else:
+        json_b = bytes(data)
+    cdef bytes path_b = path.encode("utf-8")
+    cdef mg_str json_str = mg_str_n(json_b, len(json_b))
+    cdef mg_str result = mg_json_get_tok(json_str, path_b)
+    if result.buf == NULL:
+        return None
+    return _mg_str_to_text(result)
+
+
+def json_get_num(data, path: str, default=None):
+    """Extract a numeric value from JSON by path.
+
+    Args:
+        data: JSON string or bytes
+        path: JSON path (e.g., '$.count')
+        default: Default value if not found or not a number
+
+    Returns:
+        Float value at path, or default if not found
+    """
+    cdef bytes json_b
+    if isinstance(data, str):
+        json_b = data.encode("utf-8")
+    else:
+        json_b = bytes(data)
+    cdef bytes path_b = path.encode("utf-8")
+    cdef mg_str json_str = mg_str_n(json_b, len(json_b))
+    cdef double value
+    if mg_json_get_num(json_str, path_b, &value):
+        return value
+    return default
+
+
+def json_get_bool(data, path: str, default=None):
+    """Extract a boolean value from JSON by path.
+
+    Args:
+        data: JSON string or bytes
+        path: JSON path (e.g., '$.enabled')
+        default: Default value if not found or not a boolean
+
+    Returns:
+        Boolean value at path, or default if not found
+    """
+    cdef bytes json_b
+    if isinstance(data, str):
+        json_b = data.encode("utf-8")
+    else:
+        json_b = bytes(data)
+    cdef bytes path_b = path.encode("utf-8")
+    cdef mg_str json_str = mg_str_n(json_b, len(json_b))
+    cdef bint value = 0
+    if mg_json_get_bool(json_str, path_b, &value):
+        # mg_json_get_bool returns true on success, value contains the actual boolean
+        return value != 0
+    return default
+
+
+def json_get_long(data, path: str, default=0):
+    """Extract an integer value from JSON by path.
+
+    Args:
+        data: JSON string or bytes
+        path: JSON path (e.g., '$.id')
+        default: Default value if not found or not an integer
+
+    Returns:
+        Integer value at path, or default if not found
+    """
+    cdef bytes json_b
+    if isinstance(data, str):
+        json_b = data.encode("utf-8")
+    else:
+        json_b = bytes(data)
+    cdef bytes path_b = path.encode("utf-8")
+    cdef mg_str json_str = mg_str_n(json_b, len(json_b))
+    return mg_json_get_long(json_str, path_b, default)
+
+
+def json_get_str(data, path: str):
+    """Extract a string value from JSON by path (automatically unescapes).
+
+    Args:
+        data: JSON string or bytes
+        path: JSON path (e.g., '$.message')
+
+    Returns:
+        Unescaped string value at path, or None if not found
+    """
+    cdef bytes json_b
+    if isinstance(data, str):
+        json_b = data.encode("utf-8")
+    else:
+        json_b = bytes(data)
+    cdef bytes path_b = path.encode("utf-8")
+    cdef mg_str json_str = mg_str_n(json_b, len(json_b))
+    cdef char *result = mg_json_get_str(json_str, path_b)
+    if result == NULL:
+        return None
+    try:
+        return result.decode("utf-8", "surrogateescape")
+    finally:
+        free(result)
