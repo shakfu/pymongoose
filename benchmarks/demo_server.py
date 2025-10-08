@@ -5,7 +5,15 @@ Demo pymongoose HTTP server.
 Run this and visit http://localhost:8765/ in your browser or use curl.
 Press Ctrl+C to stop.
 """
+import signal
 from pymongoose import Manager, MG_EV_HTTP_MSG
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    """Handle shutdown signals (Ctrl+C, SIGTERM)."""
+    global shutdown_requested
+    shutdown_requested = True
 
 def handler(conn, ev, data):
     """Handle HTTP requests."""
@@ -21,6 +29,12 @@ def handler(conn, ev, data):
         )
 
 def main():
+    global shutdown_requested
+
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     port = 8765
     manager = Manager(handler)
     manager.listen(f'http://0.0.0.0:{port}', http=True)
@@ -31,10 +45,12 @@ def main():
     print()
 
     try:
-        while True:
-            manager.poll(1000)
-    except KeyboardInterrupt:
-        print("\n✋ Server stopped")
+        while not shutdown_requested:
+            manager.poll(100)
+        print("\n✋ Shutting down...")
+    finally:
+        manager.close()  # Clean up resources
+        print("✅ Server stopped cleanly")
 
 if __name__ == "__main__":
     main()

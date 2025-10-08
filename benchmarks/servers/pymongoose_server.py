@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 """pymongoose HTTP server for performance benchmarking."""
 
-import threading
+import signal
 from pymongoose import Manager, MG_EV_HTTP_MSG
 
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    """Handle shutdown signals."""
+    global shutdown_requested
+    shutdown_requested = True
 
 def run_server(port: int = 8001):
     """Run pymongoose HTTP server."""
+    global shutdown_requested
+
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
     # Simple JSON response
     json_response = b'{"message":"Hello, World!"}'
 
@@ -24,10 +36,12 @@ def run_server(port: int = 8001):
 
     # Run event loop
     try:
-        while True:
-            manager.poll(1000)
-    except KeyboardInterrupt:
-        pass
+        while not shutdown_requested:
+            manager.poll(100)
+        print("\n✋ Shutting down...")
+    finally:
+        manager.close()  # Clean up resources
+        print("✅ Server stopped cleanly")
 
 
 if __name__ == "__main__":

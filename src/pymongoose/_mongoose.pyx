@@ -18,6 +18,7 @@ ELSE:
 from cpython.ref cimport PyObject, Py_INCREF, Py_DECREF
 from cpython.bytes cimport PyBytes_FromStringAndSize
 from cpython.unicode cimport PyUnicode_DecodeUTF8
+from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uintptr_t, uint16_t, uint64_t
 from libc.string cimport memset
 from libc.stddef cimport size_t
@@ -1019,7 +1020,10 @@ cdef class Connection:
             mg_http_write_chunk(conn, msg_ptr, msg_len)
 
     def close(self):
-        """Schedule closing of the connection."""
+        """Immediately close the connection.
+
+        For graceful shutdown, use drain() instead to let buffered data flush first.
+        """
         cdef mg_connection *conn = self._conn
         if conn != NULL:
             IF USE_NOGIL:
@@ -1027,6 +1031,27 @@ cdef class Connection:
                     mg_close_conn(conn)
             ELSE:
                 mg_close_conn(conn)
+
+    def drain(self):
+        """Mark connection for graceful closure.
+
+        Sets is_draining=1, which tells Mongoose to:
+        1. Stop reading from the socket
+        2. Flush any buffered outgoing data
+        3. Close the connection after send buffer is empty
+
+        This is the recommended way to close connections from the server side,
+        as it ensures response data is fully sent before closing.
+
+        Example:
+            def handler(conn, ev, data):
+                if ev == MG_EV_HTTP_MSG:
+                    conn.reply(200, b"Goodbye!")
+                    conn.drain()  # Close after response is sent
+        """
+        cdef mg_connection *conn = self._conn
+        if conn != NULL:
+            conn.is_draining = 1
 
     def tls_init(self, TlsOpts opts):
         """Initialize TLS/SSL on this connection.
@@ -1186,7 +1211,14 @@ cdef class Manager:
         """
         if self._freed:
             raise RuntimeError("Manager has been freed")
-        mg_mgr_poll(&self._mgr, timeout_ms)
+        with nogil:
+            mg_mgr_poll(&self._mgr, timeout_ms)
+        # Check for pending signals (e.g., KeyboardInterrupt from Ctrl+C)
+        # This ensures signals received during nogil section are processed
+        # PyErr_CheckSignals() returns -1 if a signal is pending and raises the exception
+        if PyErr_CheckSignals() < 0:
+            # Exception was set by PyErr_CheckSignals, Cython will propagate it
+            pass
 
     def listen(self, url: str, handler=None, *, http=False):
         """Listen on a URL; handler is optional per-listener override."""
