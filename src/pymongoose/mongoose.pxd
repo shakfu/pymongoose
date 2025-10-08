@@ -118,42 +118,42 @@ cdef extern from "mongoose.h":
         mg_str data
         uint8_t flags
 
-    cdef void mg_mgr_init(mg_mgr *mgr)
-    cdef void mg_mgr_free(mg_mgr *mgr)
+    cdef void mg_mgr_init(mg_mgr *mgr) nogil
+    cdef void mg_mgr_free(mg_mgr *mgr) nogil
     cdef void mg_mgr_poll(mg_mgr *mgr, int msecs) nogil
-    cdef mg_connection *mg_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef mg_connection *mg_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef bint mg_send(mg_connection *conn, const void *buf, size_t len)
-    cdef size_t mg_printf(mg_connection *conn, const char *fmt, ...)
-    cdef void mg_close_conn(mg_connection *conn)
-    cdef void mg_error(mg_connection *c, const char *fmt, ...)
-    cdef void mg_resolve(mg_connection *c, const char *url)
-    cdef void mg_resolve_cancel(mg_connection *c)
+    cdef mg_connection *mg_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef mg_connection *mg_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef bint mg_send(mg_connection *conn, const void *buf, size_t len) nogil
+    cdef size_t mg_printf(mg_connection *conn, const char *fmt, ...) nogil
+    cdef void mg_close_conn(mg_connection *conn) nogil
+    cdef void mg_error(mg_connection *c, const char *fmt, ...) nogil
+    cdef void mg_resolve(mg_connection *c, const char *url) nogil
+    cdef void mg_resolve_cancel(mg_connection *c) nogil
 
-    cdef mg_connection *mg_http_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef mg_connection *mg_http_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef void mg_http_reply(mg_connection *conn, int status_code, const char *headers, const char *body_fmt, ...)
-    cdef void mg_http_serve_dir(mg_connection *conn, mg_http_message *hm, mg_http_serve_opts *opts)
-    cdef mg_str *mg_http_get_header(mg_http_message *hm, const char *name)
-    cdef int mg_http_get_var(const mg_str *buf, const char *name, char *dst, size_t dst_len)
-    cdef int mg_url_decode(const char *s, size_t n, char *to, size_t to_len, int form)
-    cdef int mg_http_parse(const char *s, size_t len, mg_http_message *hm)
-    cdef int mg_http_get_request_len(const unsigned char *buf, size_t buf_len)
-    cdef void mg_http_printf_chunk(mg_connection *cnn, const char *fmt, ...)
-    cdef void mg_http_write_chunk(mg_connection *c, const char *buf, size_t len)
-    cdef void mg_http_creds(mg_http_message *hm, char *user, size_t user_len, char *_pass, size_t pass_len)
-    cdef long mg_http_upload(mg_connection *c, mg_http_message *hm, mg_fs *fs, const char *dir, size_t max_size)
-    cdef void mg_http_bauth(mg_connection *c, const char *user, const char *_pass)
-    cdef size_t mg_http_next_multipart(mg_str buf, size_t ofs, mg_http_part *part)
-    cdef void mg_http_serve_ssi(mg_connection *c, const char *root, const char *fullpath)
-    cdef mg_str mg_http_get_header_var(mg_str s, mg_str v)
-    cdef int mg_http_status(mg_http_message *hm)
+    cdef mg_connection *mg_http_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef mg_connection *mg_http_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef void mg_http_reply(mg_connection *conn, int status_code, const char *headers, const char *body_fmt, ...) nogil
+    cdef void mg_http_serve_dir(mg_connection *conn, mg_http_message *hm, mg_http_serve_opts *opts) nogil
+    cdef mg_str *mg_http_get_header(mg_http_message *hm, const char *name) nogil
+    cdef int mg_http_get_var(const mg_str *buf, const char *name, char *dst, size_t dst_len) nogil
+    cdef int mg_url_decode(const char *s, size_t n, char *to, size_t to_len, int form) nogil
+    cdef int mg_http_parse(const char *s, size_t len, mg_http_message *hm) nogil
+    cdef int mg_http_get_request_len(const unsigned char *buf, size_t buf_len) nogil
+    cdef void mg_http_printf_chunk(mg_connection *cnn, const char *fmt, ...) nogil
+    cdef void mg_http_write_chunk(mg_connection *c, const char *buf, size_t len) nogil
+    cdef void mg_http_creds(mg_http_message *hm, char *user, size_t user_len, char *_pass, size_t pass_len) nogil
+    cdef long mg_http_upload(mg_connection *c, mg_http_message *hm, mg_fs *fs, const char *dir, size_t max_size) nogil
+    cdef void mg_http_bauth(mg_connection *c, const char *user, const char *_pass) nogil
+    cdef size_t mg_http_next_multipart(mg_str buf, size_t ofs, mg_http_part *part) nogil
+    cdef void mg_http_serve_ssi(mg_connection *c, const char *root, const char *fullpath) nogil
+    cdef mg_str mg_http_get_header_var(mg_str s, mg_str v) nogil
+    cdef int mg_http_status(mg_http_message *hm) nogil
 
-    cdef mg_connection *mg_ws_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data, const char *fmt, ...)
-    cdef void mg_ws_upgrade(mg_connection *conn, mg_http_message *hm, const char *fmt, ...)
-    cdef size_t mg_ws_send(mg_connection *conn, const void *buf, size_t len, int op)
-    cdef size_t mg_ws_printf(mg_connection *conn, int op, const char *fmt, ...)
-    cdef size_t mg_ws_wrap(mg_connection *c, size_t len, int op)
+    cdef mg_connection *mg_ws_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data, const char *fmt, ...) nogil
+    cdef void mg_ws_upgrade(mg_connection *conn, mg_http_message *hm, const char *fmt, ...) nogil
+    cdef size_t mg_ws_send(mg_connection *conn, const void *buf, size_t len, int op) nogil
+    cdef size_t mg_ws_printf(mg_connection *conn, int op, const char *fmt, ...) nogil
+    cdef size_t mg_ws_wrap(mg_connection *c, size_t len, int op) nogil
     # cdef size_t mg_ws_vprintf(mg_connection *c, int op, const char *fmt, va_list *ap)
 
     cdef struct mg_tls_opts:
@@ -163,8 +163,8 @@ cdef extern from "mongoose.h":
         mg_str name
         int skip_verification
 
-    cdef void mg_tls_init(mg_connection *conn, const mg_tls_opts *opts)
-    cdef void mg_tls_free(mg_connection *conn)
+    cdef void mg_tls_init(mg_connection *conn, const mg_tls_opts *opts) nogil
+    cdef void mg_tls_free(mg_connection *conn) nogil
 
     cdef struct mg_http_serve_opts:
         const char *root_dir
@@ -197,11 +197,11 @@ cdef extern from "mongoose.h":
     cdef size_t mg_json_next(mg_str obj, size_t ofs, mg_str *key, mg_str *val)
 
     # Additional HTTP functions
-    cdef void mg_http_serve_file(mg_connection *conn, mg_http_message *hm, const char *path, mg_http_serve_opts *opts)
+    cdef void mg_http_serve_file(mg_connection *conn, mg_http_message *hm, const char *path, mg_http_serve_opts *opts) nogil
 
     # Wakeup
-    cdef bint mg_wakeup(mg_mgr *mgr, unsigned long id, const void *buf, size_t len)
-    cdef bint mg_wakeup_init(mg_mgr *mgr)
+    cdef bint mg_wakeup(mg_mgr *mgr, unsigned long id, const void *buf, size_t len) nogil
+    cdef bint mg_wakeup_init(mg_mgr *mgr) nogil
 
     # URL encoding
     cdef size_t mg_url_encode(const char *s, size_t n, char *buf, size_t len)
@@ -232,19 +232,19 @@ cdef extern from "mongoose.h":
         uint8_t qos
         uint8_t ack
 
-    cdef mg_connection *mg_mqtt_connect(mg_mgr *mgr, const char *url, mg_mqtt_opts *opts, mg_event_handler_t fn, void *fn_data)
-    cdef mg_connection *mg_mqtt_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef void mg_mqtt_login(mg_connection *c, mg_mqtt_opts *opts)
-    cdef uint16_t mg_mqtt_pub(mg_connection *c, mg_mqtt_opts *opts)
-    cdef void mg_mqtt_sub(mg_connection *c, mg_mqtt_opts *opts)
-    cdef void mg_mqtt_ping(mg_connection *c)
-    cdef void mg_mqtt_pong(mg_connection *c)
-    cdef void mg_mqtt_disconnect(mg_connection *c, mg_mqtt_opts *opts)
+    cdef mg_connection *mg_mqtt_connect(mg_mgr *mgr, const char *url, mg_mqtt_opts *opts, mg_event_handler_t fn, void *fn_data) nogil
+    cdef mg_connection *mg_mqtt_listen(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef void mg_mqtt_login(mg_connection *c, mg_mqtt_opts *opts) nogil
+    cdef uint16_t mg_mqtt_pub(mg_connection *c, mg_mqtt_opts *opts) nogil
+    cdef void mg_mqtt_sub(mg_connection *c, mg_mqtt_opts *opts) nogil
+    cdef void mg_mqtt_ping(mg_connection *c) nogil
+    cdef void mg_mqtt_pong(mg_connection *c) nogil
+    cdef void mg_mqtt_disconnect(mg_connection *c, mg_mqtt_opts *opts) nogil
 
     # SNTP (Simple Network Time Protocol)
-    cdef mg_connection *mg_sntp_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data)
-    cdef void mg_sntp_request(mg_connection *c)
-    cdef int64_t mg_sntp_parse(const unsigned char *buf, size_t len)
+    cdef mg_connection *mg_sntp_connect(mg_mgr *mgr, const char *url, mg_event_handler_t fn, void *fn_data) nogil
+    cdef void mg_sntp_request(mg_connection *c) nogil
+    cdef int64_t mg_sntp_parse(const unsigned char *buf, size_t len) nogil
 
     # Timer API
     cdef struct mg_timer:

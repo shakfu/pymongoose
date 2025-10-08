@@ -29,7 +29,7 @@ def build_extensions():
     # TLS configuration
     # MG_TLS_BUILTIN enables built-in TLS (no external deps)
     # MG_TLS_NONE disables TLS but allows nogil optimization
-    use_tls = False  # Change to False to disable TLS and enable nogil
+    use_tls = True  # Change to False to disable TLS and enable nogil
 
     if use_tls:
         define_macros = [
@@ -80,9 +80,9 @@ def build_extensions():
             "cdivision": True,
             "embedsignature": True,
         },
-        # compile_time_env={
-        #     "USE_NOGIL": not use_tls,
-        # },
+        compile_time_env={
+            "USE_NOGIL": not use_tls,
+        },
         # Build in parallel if possible
         nthreads=os.cpu_count() or 1,
     )

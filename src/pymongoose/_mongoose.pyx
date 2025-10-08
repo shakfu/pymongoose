@@ -5,11 +5,10 @@ Cython bindings that expose a Python-friendly interface to the Mongoose
 embedded networking library.
 """
 
-# USE_NOGIL compile-time constant
+# USE_NOGIL compile-time constant set via setup.py compile_time_env
 # When 1: nogil is used for parallel execution (TLS must be disabled)
 # When 0: GIL is held for safety (required when TLS is enabled)
-# TODO: Make this configurable from setup.py
-DEF USE_NOGIL = 0
+# Configured in setup.py: USE_NOGIL = not use_tls
 IF USE_NOGIL:
     print("USE_NOGIL=1")
 ELSE:
@@ -643,11 +642,12 @@ cdef class Connection:
             opts.mime_types = mime_types_b
         cdef mg_connection *conn = self._ptr()
         cdef mg_http_message *msg = message._msg
+        cdef const char *path_c = path_b
         IF USE_NOGIL:
             with nogil:
-                mg_http_serve_file(conn, msg, path_b, &opts)
+                mg_http_serve_file(conn, msg, path_c, &opts)
         ELSE:
-            mg_http_serve_file(conn, msg, path_b, &opts)
+            mg_http_serve_file(conn, msg, path_c, &opts)
 
     def ws_upgrade(self, HttpMessage message, extra_headers=None):
         """Upgrade HTTP connection to WebSocket.
@@ -685,11 +685,12 @@ cdef class Connection:
         cdef const char *buf = payload_b
         cdef size_t length = len(payload_b)
         cdef mg_connection *conn = self._ptr()
+        cdef int op_c = op
         IF USE_NOGIL:
             with nogil:
-                mg_ws_send(conn, buf, length, op)
+                mg_ws_send(conn, buf, length, op_c)
         ELSE:
-            mg_ws_send(conn, buf, length, op)
+            mg_ws_send(conn, buf, length, op_c)
 
     def mqtt_pub(self, topic: str, message, qos=0, retain=False):
         """Publish an MQTT message.
@@ -896,12 +897,13 @@ cdef class Connection:
             url: URL to resolve (e.g., "google.com" or "tcp://example.com:80")
         """
         cdef bytes url_b = url.encode("utf-8")
+        cdef const char *url_c = url_b
         cdef mg_connection *conn = self._ptr()
         IF USE_NOGIL:
             with nogil:
-                mg_resolve(conn, url_b)
+                mg_resolve(conn, url_c)
         ELSE:
-            mg_resolve(conn, url_b)
+            mg_resolve(conn, url_c)
 
     def resolve_cancel(self):
         """Cancel an ongoing DNS resolution."""
