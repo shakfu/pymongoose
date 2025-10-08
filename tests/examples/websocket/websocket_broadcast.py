@@ -20,6 +20,7 @@ Each tab will receive periodic broadcast messages.
 """
 
 import argparse
+import signal
 import sys
 import time
 from pathlib import Path
@@ -34,6 +35,12 @@ from pymongoose import (
     MG_EV_WS_OPEN,
     MG_EV_CLOSE,
 )
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 
 class BroadcastServer:
@@ -103,6 +110,11 @@ class BroadcastServer:
 
     def run(self):
         """Start the server and timer."""
+        global shutdown_requested
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
         self.manager = Manager(self.handler)
         self.manager.listen(f"http://0.0.0.0:{self.port}", http=True)
 
@@ -121,13 +133,13 @@ class BroadcastServer:
         print("Press Ctrl+C to stop")
 
         try:
-            while True:
-                self.manager.poll(1000)
-        except KeyboardInterrupt:
+            while not shutdown_requested:
+                self.manager.poll(100)
             print(f"\nShutting down... (broadcasted {self.broadcast_count} messages)")
         finally:
             self.ws_clients.clear()
             self.manager.close()
+            print("Server stopped cleanly")
 
 
 # HTML page served to clients

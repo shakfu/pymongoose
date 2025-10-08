@@ -59,40 +59,74 @@ pip install -e .
 ### Simple HTTP Server
 
 ```python
+import signal
 from pymongoose import Manager, MG_EV_HTTP_MSG
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 def handler(conn, event, data):
     if event == MG_EV_HTTP_MSG:
         conn.reply(200, "Hello, World!")
 
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 mgr = Manager(handler)
 mgr.listen("http://0.0.0.0:8000", http=True)
 
-print("Server running on http://localhost:8000")
-while True:
-    mgr.poll(1000)
+print("Server running on http://localhost:8000. Press Ctrl+C to stop.")
+try:
+    while not shutdown_requested:
+        mgr.poll(100)
+    print("Shutting down...")
+finally:
+    mgr.close()
 ```
 
 ### Serve Static Files
 
 ```python
+import signal
 from pymongoose import Manager, MG_EV_HTTP_MSG
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 def handler(conn, event, data):
     if event == MG_EV_HTTP_MSG:
         conn.serve_dir(data, root_dir="./public")
 
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 mgr = Manager(handler)
 mgr.listen("http://0.0.0.0:8000", http=True)
 
-while True:
-    mgr.poll(1000)
+try:
+    while not shutdown_requested:
+        mgr.poll(100)
+finally:
+    mgr.close()
 ```
 
 ### WebSocket Echo Server
 
 ```python
+import signal
 from pymongoose import Manager, MG_EV_HTTP_MSG, MG_EV_WS_MSG
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 def handler(conn, event, data):
     if event == MG_EV_HTTP_MSG:
@@ -100,11 +134,17 @@ def handler(conn, event, data):
     elif event == MG_EV_WS_MSG:
         conn.ws_send(data.text)  # Echo back
 
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 mgr = Manager(handler)
 mgr.listen("http://0.0.0.0:8000", http=True)
 
-while True:
-    mgr.poll(1000)
+try:
+    while not shutdown_requested:
+        mgr.poll(100)
+finally:
+    mgr.close()
 ```
 
 ## API Reference

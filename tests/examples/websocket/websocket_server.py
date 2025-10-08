@@ -33,6 +33,7 @@ Test with:
 """
 
 import argparse
+import signal
 import sys
 from pathlib import Path
 
@@ -47,6 +48,12 @@ from pymongoose import (
     WEBSOCKET_OP_TEXT,
     WEBSOCKET_OP_BINARY,
 )
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 
 # Track connected WebSocket clients
@@ -130,12 +137,15 @@ def handler(conn, event, data):
 
 
 def main():
-    global args
+    global args, shutdown_requested
 
     parser = argparse.ArgumentParser(description='WebSocket Server Example')
     parser.add_argument('--port', type=int, default=8000, help='Port to listen on')
     parser.add_argument('--root', default='./ws_root', help='Web root directory')
     args = parser.parse_args()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # Create web root if it doesn't exist
     web_root = Path(args.root)
@@ -249,13 +259,13 @@ def main():
     print("Press Ctrl+C to stop")
 
     try:
-        while True:
-            mgr.poll(1000)
-    except KeyboardInterrupt:
+        while not shutdown_requested:
+            mgr.poll(100)
         print(f"\nShutting down... ({len(ws_clients)} clients connected)")
     finally:
         ws_clients.clear()
         mgr.close()
+        print("Server stopped cleanly")
 
 
 if __name__ == "__main__":

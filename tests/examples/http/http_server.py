@@ -20,6 +20,7 @@ Usage:
 
 import argparse
 import os
+import signal
 import sys
 from pathlib import Path
 
@@ -33,6 +34,12 @@ from pymongoose import (
     TlsOpts,
     http_parse_multipart,
 )
+
+shutdown_requested = False
+
+def signal_handler(sig, frame):
+    global shutdown_requested
+    shutdown_requested = True
 
 
 def handle_upload(conn, message):
@@ -140,13 +147,16 @@ DQ6La8aVGgWfxslioYdFlPn90AuUHESOwQ==
 
 
 def main():
-    global args
+    global args, shutdown_requested
 
     parser = argparse.ArgumentParser(description='HTTP Server Example')
     parser.add_argument('--port', type=int, default=8000, help='Port to listen on')
     parser.add_argument('--root', default='./web_root', help='Web root directory')
     parser.add_argument('--tls', action='store_true', help='Enable HTTPS with self-signed cert')
     args = parser.parse_args()
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     # Create web root if it doesn't exist
     web_root = Path(args.root)
@@ -200,12 +210,12 @@ def main():
     print("Press Ctrl+C to stop")
 
     try:
-        while True:
-            mgr.poll(1000)
-    except KeyboardInterrupt:
+        while not shutdown_requested:
+            mgr.poll(100)
         print("\nShutting down...")
     finally:
         mgr.close()
+        print("Server stopped cleanly")
 
 
 if __name__ == "__main__":
