@@ -29,22 +29,20 @@ def build_extensions():
     # TLS configuration
     # MG_TLS_BUILTIN enables built-in TLS (no external deps)
     # MG_TLS_NONE disables TLS but allows nogil optimization
-    use_tls = True  # Change to False to disable TLS and enable nogil
+    use_tls = False  # Change to False to disable TLS and enable nogil
 
     if use_tls:
         define_macros = [
             ("MG_TLS", "MG_TLS_BUILTIN"),  # Enable built-in TLS support
             ("MG_ENABLE_PACKED_FS", "0"),  # Disable packed filesystem (not needed)
-            # ("NOGIL_SAFE", "0"),           # Disable nogil (TLS uses internal locks)
+            # ("USE_NOGIL", "0"),            # Disable nogil (TLS uses internal locks)
         ]
-        extra_compile_args.append("-DNOGIL_SAFE=0")
     else:
         define_macros = [
             ("MG_TLS", "MG_TLS_NONE"),     # Disable TLS
             ("MG_ENABLE_PACKED_FS", "0"),  # Disable packed filesystem (not needed)
-            # ("NOGIL_SAFE", "1"),           # Enable nogil for parallel execution
+            # ("USE_NOGIL", "1"),            # Enable nogil for parallel execution
         ]
-        extra_compile_args.append("-DNOGIL_SAFE=1")
 
     if sys.platform == "darwin":
         # macOS specific flags
@@ -82,6 +80,9 @@ def build_extensions():
             "cdivision": True,
             "embedsignature": True,
         },
+        # compile_time_env={
+        #     "USE_NOGIL": not use_tls,
+        # },
         # Build in parallel if possible
         nthreads=os.cpu_count() or 1,
     )

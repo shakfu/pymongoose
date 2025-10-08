@@ -5,11 +5,15 @@ Cython bindings that expose a Python-friendly interface to the Mongoose
 embedded networking library.
 """
 
-# NOGIL_SAFE compile-time constant
+# USE_NOGIL compile-time constant
 # When 1: nogil is used for parallel execution (TLS must be disabled)
 # When 0: GIL is held for safety (required when TLS is enabled)
 # TODO: Make this configurable from setup.py
-DEF NOGIL_SAFE = 0
+DEF USE_NOGIL = 0
+IF USE_NOGIL:
+    print("USE_NOGIL=1")
+ELSE:
+    print("USE_NOGIL=0")
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_DECREF
 from cpython.bytes cimport PyBytes_FromStringAndSize
@@ -560,7 +564,7 @@ cdef class Connection:
         cdef size_t length = len(payload)
         cdef mg_connection *conn = self._ptr()
         cdef bint result
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 result = mg_send(conn, buf, length)
         ELSE:
@@ -586,7 +590,7 @@ cdef class Connection:
         cdef const char *body_fmt_c = b"%s"
         cdef const char *body_c = body_b
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_http_reply(conn, status_code, headers_c, body_fmt_c, body_c)
         ELSE:
@@ -615,7 +619,7 @@ cdef class Connection:
             opts.page404 = page404_b
         cdef mg_connection *conn = self._ptr()
         cdef mg_http_message *msg = message._msg
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_http_serve_dir(conn, msg, &opts)
         ELSE:
@@ -639,7 +643,7 @@ cdef class Connection:
             opts.mime_types = mime_types_b
         cdef mg_connection *conn = self._ptr()
         cdef mg_http_message *msg = message._msg
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_http_serve_file(conn, msg, path_b, &opts)
         ELSE:
@@ -665,7 +669,7 @@ cdef class Connection:
 
         cdef mg_connection *conn = self._ptr()
         cdef mg_http_message *msg = message._msg
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_ws_upgrade(conn, msg, fmt)
         ELSE:
@@ -681,7 +685,7 @@ cdef class Connection:
         cdef const char *buf = payload_b
         cdef size_t length = len(payload_b)
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_ws_send(conn, buf, length, op)
         ELSE:
@@ -716,7 +720,7 @@ cdef class Connection:
 
         cdef mg_connection *conn = self._ptr()
         cdef uint16_t msg_id
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 msg_id = mg_mqtt_pub(conn, &opts)
         ELSE:
@@ -738,7 +742,7 @@ cdef class Connection:
         opts.qos = qos
 
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_mqtt_sub(conn, &opts)
         ELSE:
@@ -747,7 +751,7 @@ cdef class Connection:
     def mqtt_ping(self):
         """Send MQTT ping."""
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_mqtt_ping(conn)
         ELSE:
@@ -756,7 +760,7 @@ cdef class Connection:
     def mqtt_pong(self):
         """Send MQTT pong."""
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_mqtt_pong(conn)
         ELSE:
@@ -770,7 +774,7 @@ cdef class Connection:
         cdef mg_mqtt_opts opts
         memset(&opts, 0, sizeof(opts))
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_mqtt_disconnect(conn, &opts)
         ELSE:
@@ -893,7 +897,7 @@ cdef class Connection:
         """
         cdef bytes url_b = url.encode("utf-8")
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_resolve(conn, url_b)
         ELSE:
@@ -902,7 +906,7 @@ cdef class Connection:
     def resolve_cancel(self):
         """Cancel an ongoing DNS resolution."""
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_resolve_cancel(conn)
         ELSE:
@@ -929,7 +933,7 @@ cdef class Connection:
         Triggers MG_EV_SNTP_TIME event when response is received.
         """
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_sntp_request(conn)
         ELSE:
@@ -964,7 +968,7 @@ cdef class Connection:
 
         if len(chunk_data) == 0:
             # Empty chunk signals end
-            IF NOGIL_SAFE:
+            IF USE_NOGIL:
                 with nogil:
                     mg_http_write_chunk(conn, NULL, 0)
             ELSE:
@@ -972,7 +976,7 @@ cdef class Connection:
         else:
             buf_ptr = chunk_data
             buf_len = len(chunk_data)
-            IF NOGIL_SAFE:
+            IF USE_NOGIL:
                 with nogil:
                     mg_http_write_chunk(conn, buf_ptr, buf_len)
             ELSE:
@@ -1005,7 +1009,7 @@ cdef class Connection:
         cdef mg_connection *conn = self._ptr()
         cdef const char *msg_ptr = sse_msg
         cdef size_t msg_len = len(sse_msg)
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_http_write_chunk(conn, msg_ptr, msg_len)
         ELSE:
@@ -1015,7 +1019,7 @@ cdef class Connection:
         """Schedule closing of the connection."""
         cdef mg_connection *conn = self._conn
         if conn != NULL:
-            IF NOGIL_SAFE:
+            IF USE_NOGIL:
                 with nogil:
                     mg_close_conn(conn)
             ELSE:
@@ -1057,7 +1061,7 @@ cdef class Connection:
         c_opts.skip_verification = 1 if opts.skip_verification else 0
 
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_tls_init(conn, &c_opts)
         ELSE:
@@ -1069,7 +1073,7 @@ cdef class Connection:
         Typically not needed as TLS is automatically freed when connection closes.
         """
         cdef mg_connection *conn = self._ptr()
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 mg_tls_free(conn)
         ELSE:
@@ -1320,7 +1324,7 @@ cdef class Manager:
         cdef size_t len_data = len(data_b)
         cdef unsigned long conn_id = <unsigned long>connection_id
         cdef bint result
-        IF NOGIL_SAFE:
+        IF USE_NOGIL:
             with nogil:
                 result = mg_wakeup(&self._mgr, conn_id, buf, len_data)
         ELSE:

@@ -37,11 +37,11 @@ ZIP = $(DIST_NAME).zip
 
 all: build
 
-build:
-	@uv sync
+build: clean
+	@uv sync --reinstall-package pymongoose
 
 clean:
-	rm -rf build
+	@rm -rf build
 
 test:
 	@uv run pytest -v
