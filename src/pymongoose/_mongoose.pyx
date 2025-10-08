@@ -491,10 +491,19 @@ cdef class Connection:
         """Return local address as (ip, port, is_ipv6) tuple."""
         if self._conn == NULL:
             return None
-        cdef mg_addr addr = self._conn.loc
-        cdef bytes ip_bytes = bytes(addr.ip[:16])
-        cdef uint16_t host_port = ntohs(addr.port)
-        if addr.is_ip6:
+        cdef mg_addr addr
+        cdef uint16_t net_port
+        cdef uint16_t host_port
+        cdef bint is_ipv6
+
+        # Copy addr struct and convert port with nogil
+        with nogil:
+            addr = self._conn.loc
+            net_port = addr.port
+            host_port = ntohs(net_port)
+            is_ipv6 = addr.is_ip6
+
+        if is_ipv6:
             # IPv6 address formatting
             parts = []
             for i in range(8):
@@ -503,17 +512,26 @@ cdef class Connection:
         else:
             # IPv4 address
             ip_str = f"{addr.ip[0]}.{addr.ip[1]}.{addr.ip[2]}.{addr.ip[3]}"
-        return (ip_str, host_port, bool(addr.is_ip6))
+        return (ip_str, host_port, bool(is_ipv6))
 
     @property
     def remote_addr(self):
         """Return remote address as (ip, port, is_ipv6) tuple."""
         if self._conn == NULL:
             return None
-        cdef mg_addr addr = self._conn.rem
-        cdef bytes ip_bytes = bytes(addr.ip[:16])
-        cdef uint16_t host_port = ntohs(addr.port)
-        if addr.is_ip6:
+        cdef mg_addr addr
+        cdef uint16_t net_port
+        cdef uint16_t host_port
+        cdef bint is_ipv6
+
+        # Copy addr struct and convert port with nogil
+        with nogil:
+            addr = self._conn.rem
+            net_port = addr.port
+            host_port = ntohs(net_port)
+            is_ipv6 = addr.is_ip6
+
+        if is_ipv6:
             # IPv6 address formatting
             parts = []
             for i in range(8):
@@ -522,7 +540,7 @@ cdef class Connection:
         else:
             # IPv4 address
             ip_str = f"{addr.ip[0]}.{addr.ip[1]}.{addr.ip[2]}.{addr.ip[3]}"
-        return (ip_str, host_port, bool(addr.is_ip6))
+        return (ip_str, host_port, bool(is_ipv6))
 
     def send(self, data):
         """Send raw bytes to the peer."""
@@ -533,7 +551,11 @@ cdef class Connection:
             payload = bytes(data)
         cdef const char *buf = payload
         cdef size_t length = len(payload)
-        if not mg_send(self._ptr(), buf, length):
+        cdef mg_connection *conn = self._ptr()
+        cdef bint result
+        with nogil:
+            result = mg_send(conn, buf, length)
+        if not result:
             raise RuntimeError("mg_send failed")
 
     def reply(self, int status_code, body=b"", headers=None):
@@ -552,7 +574,9 @@ cdef class Connection:
         cdef const char *headers_c = headers_b if headers_b else b""
         cdef const char *body_fmt_c = b"%s"
         cdef const char *body_c = body_b
-        mg_http_reply(self._ptr(), status_code, headers_c, body_fmt_c, body_c)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_http_reply(conn, status_code, headers_c, body_fmt_c, body_c)
 
     def serve_dir(self, HttpMessage message, root_dir: str, extra_headers: str = "", mime_types: str = "", page404: str = ""):
         """Serve files from a directory using Mongoose's built-in static handler."""
@@ -562,9 +586,9 @@ cdef class Connection:
         memset(&opts, 0, sizeof(mg_http_serve_opts))
         cdef bytes root_b = root_dir.encode("utf-8")
         opts.root_dir = root_b
-        extra_headers_b = None
-        mime_types_b = None
-        page404_b = None
+        cdef bytes extra_headers_b
+        cdef bytes mime_types_b
+        cdef bytes page404_b
         if extra_headers:
             extra_headers_b = extra_headers.encode("utf-8")
             opts.extra_headers = extra_headers_b
@@ -574,7 +598,10 @@ cdef class Connection:
         if page404:
             page404_b = page404.encode("utf-8")
             opts.page404 = page404_b
-        mg_http_serve_dir(self._ptr(), message._msg, &opts)
+        cdef mg_connection *conn = self._ptr()
+        cdef mg_http_message *msg = message._msg
+        with nogil:
+            mg_http_serve_dir(conn, msg, &opts)
 
     def serve_file(self, HttpMessage message, path: str, extra_headers: str = "", mime_types: str = ""):
         """Serve a single file using Mongoose's built-in static handler."""
@@ -583,15 +610,18 @@ cdef class Connection:
         cdef mg_http_serve_opts opts
         memset(&opts, 0, sizeof(mg_http_serve_opts))
         cdef bytes path_b = path.encode("utf-8")
-        extra_headers_b = None
-        mime_types_b = None
+        cdef bytes extra_headers_b
+        cdef bytes mime_types_b
         if extra_headers:
             extra_headers_b = extra_headers.encode("utf-8")
             opts.extra_headers = extra_headers_b
         if mime_types:
             mime_types_b = mime_types.encode("utf-8")
             opts.mime_types = mime_types_b
-        mg_http_serve_file(self._ptr(), message._msg, path_b, &opts)
+        cdef mg_connection *conn = self._ptr()
+        cdef mg_http_message *msg = message._msg
+        with nogil:
+            mg_http_serve_file(conn, msg, path_b, &opts)
 
     def ws_upgrade(self, HttpMessage message, extra_headers=None):
         """Upgrade HTTP connection to WebSocket.
@@ -604,12 +634,16 @@ cdef class Connection:
             raise ValueError("HttpMessage is not valid for this event")
 
         cdef const char *fmt = NULL
+        cdef bytes headers_b
         if extra_headers:
             headers_str = "\r\n".join(f"{k}: {v}" for k, v in extra_headers.items())
-            headers_bytes = headers_str.encode("utf-8")
-            fmt = headers_bytes
+            headers_b = headers_str.encode("utf-8")
+            fmt = headers_b
 
-        mg_ws_upgrade(self._ptr(), message._msg, fmt)
+        cdef mg_connection *conn = self._ptr()
+        cdef mg_http_message *msg = message._msg
+        with nogil:
+            mg_ws_upgrade(conn, msg, fmt)
 
     def ws_send(self, data, op=WEBSOCKET_OP_TEXT):
         """Send a WebSocket frame."""
@@ -619,7 +653,10 @@ cdef class Connection:
             payload = bytes(data)
         cdef bytes payload_b = payload
         cdef const char *buf = payload_b
-        mg_ws_send(self._ptr(), buf, len(payload_b), op)
+        cdef size_t length = len(payload_b)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_ws_send(conn, buf, length, op)
 
     def mqtt_pub(self, topic: str, message, qos=0, retain=False):
         """Publish an MQTT message.
@@ -648,7 +685,11 @@ cdef class Connection:
         opts.qos = qos
         opts.retain = retain
 
-        return mg_mqtt_pub(self._ptr(), &opts)
+        cdef mg_connection *conn = self._ptr()
+        cdef uint16_t msg_id
+        with nogil:
+            msg_id = mg_mqtt_pub(conn, &opts)
+        return msg_id
 
     def mqtt_sub(self, topic: str, qos=0):
         """Subscribe to an MQTT topic.
@@ -664,15 +705,21 @@ cdef class Connection:
         opts.topic = mg_str_n(topic_b, len(topic_b))
         opts.qos = qos
 
-        mg_mqtt_sub(self._ptr(), &opts)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_mqtt_sub(conn, &opts)
 
     def mqtt_ping(self):
         """Send MQTT ping."""
-        mg_mqtt_ping(self._ptr())
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_mqtt_ping(conn)
 
     def mqtt_pong(self):
         """Send MQTT pong."""
-        mg_mqtt_pong(self._ptr())
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_mqtt_pong(conn)
 
     def mqtt_disconnect(self):
         """Send MQTT disconnect message.
@@ -681,7 +728,9 @@ cdef class Connection:
         """
         cdef mg_mqtt_opts opts
         memset(&opts, 0, sizeof(opts))
-        mg_mqtt_disconnect(self._ptr(), &opts)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_mqtt_disconnect(conn, &opts)
 
     def error(self, message: str):
         """Trigger an error event on this connection.
@@ -690,7 +739,10 @@ cdef class Connection:
             message: Error message
         """
         cdef bytes msg_b = message.encode("utf-8")
-        mg_error(self._ptr(), b"%s", <char*>msg_b)
+        cdef mg_connection *conn = self._ptr()
+        cdef const char *msg_ptr = msg_b
+        with nogil:
+            mg_error(conn, b"%s", <char*>msg_ptr)
 
     @property
     def is_client(self):
@@ -731,11 +783,6 @@ cdef class Connection:
     def is_draining(self):
         """Return True if connection is draining (sending remaining data before close)."""
         return self._conn.is_draining != 0 if self._conn != NULL else False
-
-    @property
-    def is_tls(self):
-        """Return True if connection is using TLS/SSL."""
-        return self._conn.is_tls != 0 if self._conn != NULL else False
 
     @property
     def recv_len(self):
@@ -802,11 +849,15 @@ cdef class Connection:
             url: URL to resolve (e.g., "google.com" or "tcp://example.com:80")
         """
         cdef bytes url_b = url.encode("utf-8")
-        mg_resolve(self._ptr(), url_b)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_resolve(conn, url_b)
 
     def resolve_cancel(self):
         """Cancel an ongoing DNS resolution."""
-        mg_resolve_cancel(self._ptr())
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_resolve_cancel(conn)
 
     def http_basic_auth(self, username: str, password: str):
         """Send HTTP Basic Authentication credentials.
@@ -819,7 +870,9 @@ cdef class Connection:
         """
         cdef bytes user_b = username.encode("utf-8")
         cdef bytes pass_b = password.encode("utf-8")
-        mg_http_bauth(self._ptr(), user_b, pass_b)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_http_bauth(conn, user_b, pass_b)
 
     def sntp_request(self):
         """Send an SNTP time request.
@@ -827,7 +880,9 @@ cdef class Connection:
         Use on a connection created with Manager.sntp_connect().
         Triggers MG_EV_SNTP_TIME event when response is received.
         """
-        mg_sntp_request(self._ptr())
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_sntp_request(conn)
 
     def http_chunk(self, data):
         """Send an HTTP chunked transfer encoding chunk.
@@ -852,11 +907,19 @@ cdef class Connection:
         else:
             chunk_data = bytes(data)
 
+        cdef mg_connection *conn = self._ptr()
+        cdef const char *buf_ptr
+        cdef size_t buf_len
+
         if len(chunk_data) == 0:
             # Empty chunk signals end
-            mg_http_write_chunk(self._ptr(), NULL, 0)
+            with nogil:
+                mg_http_write_chunk(conn, NULL, 0)
         else:
-            mg_http_write_chunk(self._ptr(), chunk_data, len(chunk_data))
+            buf_ptr = chunk_data
+            buf_len = len(chunk_data)
+            with nogil:
+                mg_http_write_chunk(conn, buf_ptr, buf_len)
 
     def http_sse(self, event_type: str, data: str):
         """Send Server-Sent Events (SSE) formatted message.
@@ -882,12 +945,18 @@ cdef class Connection:
         cdef bytes data_b = data.encode("utf-8")
         # SSE format: "event: <type>\ndata: <data>\n\n"
         cdef bytes sse_msg = b"event: " + event_b + b"\ndata: " + data_b + b"\n\n"
-        mg_http_write_chunk(self._ptr(), sse_msg, len(sse_msg))
+        cdef mg_connection *conn = self._ptr()
+        cdef const char *msg_ptr = sse_msg
+        cdef size_t msg_len = len(sse_msg)
+        with nogil:
+            mg_http_write_chunk(conn, msg_ptr, msg_len)
 
     def close(self):
         """Schedule closing of the connection."""
-        if self._conn != NULL:
-            mg_close_conn(self._conn)
+        cdef mg_connection *conn = self._conn
+        if conn != NULL:
+            with nogil:
+                mg_close_conn(conn)
 
     def tls_init(self, TlsOpts opts):
         """Initialize TLS/SSL on this connection.
@@ -924,14 +993,18 @@ cdef class Connection:
 
         c_opts.skip_verification = 1 if opts.skip_verification else 0
 
-        mg_tls_init(self._ptr(), &c_opts)
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_tls_init(conn, &c_opts)
 
     def tls_free(self):
         """Free TLS/SSL resources on this connection.
 
         Typically not needed as TLS is automatically freed when connection closes.
         """
-        mg_tls_free(self._ptr())
+        cdef mg_connection *conn = self._ptr()
+        with nogil:
+            mg_tls_free(conn)
 
     def __repr__(self):
         if self._conn == NULL:
@@ -1170,7 +1243,11 @@ cdef class Manager:
         cdef bytes data_b = data
         cdef const void *buf = <const void*><char*>data_b if len(data_b) > 0 else NULL
         cdef size_t len_data = len(data_b)
-        return mg_wakeup(&self._mgr, <unsigned long>connection_id, buf, len_data)
+        cdef unsigned long conn_id = <unsigned long>connection_id
+        cdef bint result
+        with nogil:
+            result = mg_wakeup(&self._mgr, conn_id, buf, len_data)
+        return result
 
     def timer_add(self, milliseconds: int, callback, *, repeat=False, run_now=False):
         """Add a timer that calls a Python callback periodically.
