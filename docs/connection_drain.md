@@ -60,6 +60,7 @@ def drain(self):
 ```
 
 **When to use**:
+
 - [x] After sending HTTP response
 - [x] After sending last WebSocket message
 - [x] When you want client to receive all data
@@ -75,6 +76,7 @@ def close(self):
 ```
 
 **When to use**:
+
 - [!] Handling protocol violations
 - [!] Malicious connections (timeout/abuse)
 - [!] Emergency shutdown
@@ -258,6 +260,7 @@ For most HTTP responses (< 10KB), the difference is negligible (< 1ms).
 ### Connection Reuse
 
 HTTP/1.1 keep-alive reuses connections:
+
 - **Without drain**: ~60,000 req/sec (benchmark result)
 - **With drain every request**: ~45,000 req/sec (more TCP overhead)
 
@@ -287,5 +290,6 @@ This ensures buffered data is flushed before closing.
 ---
 
 See also:
+
 - `cleanup_and_shutdown.md` - Manager cleanup
 - `shutdown_best_practices.md` - Graceful server shutdown

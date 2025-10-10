@@ -5,9 +5,11 @@ This document outlines security considerations when using pymongoose for network
 ## HTTP Basic Authentication
 
 ### Overview
+
 The `Connection.http_basic_auth()` method implements HTTP Basic Authentication (RFC 7617), which transmits credentials encoded in Base64 format.
 
 ### Security Model
+
 - **Base64 is encoding, not encryption** - credentials can be trivially decoded by anyone who intercepts them
 - **Safe over HTTPS/TLS** - the TLS layer encrypts all traffic including the Authorization header
 - **Unsafe over HTTP** - credentials are transmitted in plaintext and visible to network observers
@@ -15,6 +17,7 @@ The `Connection.http_basic_auth()` method implements HTTP Basic Authentication (
 ### Recommended Usage
 
 [x] **SAFE - Always use HTTPS for authentication:**
+
 ```python
 # Credentials are encrypted by TLS
 conn = manager.connect("https://api.example.com/", http=True)
@@ -22,6 +25,7 @@ conn.http_basic_auth("username", "password")
 ```
 
 [X] **UNSAFE - Never send credentials over HTTP:**
+
 ```python
 # Credentials visible to anyone monitoring the network
 conn = manager.connect("http://api.example.com/", http=True)
@@ -29,7 +33,9 @@ conn.http_basic_auth("username", "password")  # DANGEROUS
 ```
 
 ### Alternative Authentication Methods
+
 For production applications, consider:
+
 - **Token-based auth** - OAuth 2.0, JWT tokens
 - **API keys** - In headers (still requires HTTPS)
 - **Mutual TLS** - Certificate-based authentication
@@ -38,6 +44,7 @@ For production applications, consider:
 ## TLS/HTTPS Security
 
 ### Certificate Verification
+
 When using TLS connections, Mongoose validates server certificates by default. To configure:
 
 ```python
@@ -46,17 +53,20 @@ When using TLS connections, Mongoose validates server certificates by default. T
 ```
 
 **Note:** TLS configuration (`mg_tls_opts`) is not yet wrapped in pymongoose. When implemented:
+
 - Always validate certificates in production (`skip_verification=False`)
 - Only skip verification for development/testing with trusted local servers
 
 ## Connection Security
 
 ### Transport Encryption
+
 - **TCP/HTTP** - No encryption, all data visible on network
 - **TLS/HTTPS/WSS** - Encrypted transport, protects data in transit
 - **UDP** - No built-in encryption
 
 ### Recommendations
+
 1. **Use TLS for sensitive data** - Always encrypt connections carrying credentials, personal data, or confidential information
 2. **Validate inputs** - Sanitize all data received from network connections
 3. **Rate limiting** - Use connection flow control (`is_full`, `is_draining`) to prevent resource exhaustion
@@ -65,6 +75,7 @@ When using TLS connections, Mongoose validates server certificates by default. T
 ## Error Handling
 
 ### Information Disclosure
+
 The `Connection.error()` method triggers error events with error messages. Be careful not to expose sensitive information:
 
 ```python
@@ -76,7 +87,9 @@ conn.error("Authentication failed")
 ```
 
 ### Error Event Data
+
 Error events (`MG_EV_ERROR`) may contain:
+
 - Network error details
 - Connection state information
 - Protocol-specific error messages
@@ -86,12 +99,15 @@ Error events (`MG_EV_ERROR`) may contain:
 ## DNS Resolution
 
 ### DNS Spoofing
+
 The `Connection.resolve()` method performs DNS lookups which are vulnerable to:
+
 - **DNS cache poisoning**
 - **Man-in-the-middle attacks**
 - **DNS rebinding attacks**
 
 ### Mitigations
+
 1. **Use DNSSEC** - When available, provides cryptographic validation
 2. **Validate resolved addresses** - Check resolved IPs against expected ranges
 3. **Use TLS** - Even if DNS is spoofed, TLS certificate validation prevents connection to wrong server
@@ -109,6 +125,7 @@ def handler(conn, ev, data):
 ## WebSocket Security
 
 ### Origin Validation
+
 WebSocket connections can be initiated from any origin. Always validate:
 
 ```python
@@ -123,12 +140,14 @@ def ws_handler(conn, ev, data):
 ```
 
 ### WSS (WebSocket Secure)
+
 - Always use `wss://` (WebSocket over TLS) for sensitive data
 - Never use `ws://` for authentication tokens or personal information
 
 ## MQTT Security
 
 ### MQTT Authentication
+
 MQTT supports username/password authentication:
 
 ```python
@@ -141,6 +160,7 @@ conn = manager.mqtt_connect(
 ```
 
 **Security Considerations:**
+
 1. **Use MQTT over TLS** - Use `mqtts://` or port 8883 for encrypted transport
 2. **Strong passwords** - MQTT passwords are often stored in plaintext on broker
 3. **Client ID randomization** - Prevent client ID spoofing
@@ -158,6 +178,7 @@ conn = manager.mqtt_connect(
 ## Input Validation
 
 ### HTTP Request Parsing
+
 Always validate and sanitize inputs from HTTP requests:
 
 ```python
@@ -181,6 +202,7 @@ def handler(conn, ev, data):
 ```
 
 ### JSON Input
+
 When parsing JSON with `json_get*` functions:
 
 ```python
@@ -202,6 +224,7 @@ if email and not is_valid_email(email):
 ## Resource Management
 
 ### Connection Limits
+
 Prevent resource exhaustion:
 
 ```python
@@ -224,6 +247,7 @@ def handler(conn, ev, data):
 ```
 
 ### Flow Control
+
 Use backpressure flags to prevent memory exhaustion:
 
 ```python
@@ -238,6 +262,7 @@ def handler(conn, ev, data):
 ## Common Vulnerabilities
 
 ### Path Traversal
+
 When serving files, validate paths:
 
 ```python
@@ -256,6 +281,7 @@ def handler(conn, ev, data):
 ```
 
 ### Command Injection
+
 Never pass unsanitized input to system commands:
 
 ```python
@@ -270,6 +296,7 @@ with open(filename, 'r') as f:
 ```
 
 ### Cross-Site Scripting (XSS)
+
 Escape HTML output:
 
 ```python

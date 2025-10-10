@@ -136,6 +136,7 @@ python your_server.py
 ## Complete Example
 
 See `benchmarks/demo_server.py` for a working example with:
+
 - [x] Responsive Ctrl+C (`poll(100)`)
 - [x] Proper cleanup (`try`/`finally`)
 - [x] User-friendly messages
@@ -143,5 +144,6 @@ See `benchmarks/demo_server.py` for a working example with:
 ---
 
 **Further Reading**:
+
 - `cleanup_and_shutdown.md` - Comprehensive guide with advanced patterns
 - `poll_timeout_guide.md` - Deep dive on poll timeout tradeoffs

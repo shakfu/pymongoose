@@ -37,11 +37,13 @@ finally:
 ```
 
 **Pros**:
+
 - [x] Reliable and fast
 - [x] Works with both SIGINT and SIGTERM
 - [x] Production-ready pattern
 
 **Cons**:
+
 - Requires explicit signal handler setup
 
 ## Solution 2: Try/Except with Short Timeout
@@ -62,10 +64,12 @@ finally:
 ```
 
 **Pros**:
+
 - [x] Simple, no signal handler needed
 - [x] May work depending on timing
 
 **Cons**:
+
 - [X] Not reliable - Ctrl+C might not be caught
 - [X] Depends on when signal arrives relative to poll() call
 
@@ -94,15 +98,18 @@ finally:
 ```
 
 **Pros**:
+
 - Works around nogil signal deferral
 
 **Cons**:
+
 - [X] Complex and hacky
 - [X] Not recommended
 
 ## Why Not Remove nogil?
 
 Removing `nogil` from `poll()` would fix Ctrl+C but:
+
 - [X] Loses 30-40% throughput (benchmark shows 60k → 40k req/sec)
 - [X] Prevents true parallelism
 - [X] Makes multi-threaded servers slower
@@ -169,6 +176,7 @@ if __name__ == "__main__":
 ```
 
 This pattern:
+
 - [x] Handles Ctrl+C reliably
 - [x] Handles SIGTERM (systemd, Docker)
 - [x] Keeps nogil optimization

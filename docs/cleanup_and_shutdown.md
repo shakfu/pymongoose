@@ -5,12 +5,14 @@ Best practices for properly shutting down pymongoose servers and cleaning up res
 ## Why Cleanup Matters
 
 The `Manager` object owns C resources that must be explicitly freed:
+
 - Network sockets and connections
 - Internal Mongoose event structures
 - Memory allocated by the C library
 - Timer callbacks
 
 **Not calling `manager.close()` can lead to**:
+
 - Resource leaks (file descriptors, memory)
 - Socket CLOSE_WAIT states
 - Segfaults if Manager is freed while connections are active
@@ -52,6 +54,7 @@ manager.close()
 5. Sets `manager._freed = True` to prevent further use
 
 After `close()`, the Manager is unusable:
+
 ```python
 manager.close()
 manager.poll(100)  # [X] RuntimeError: Manager has been freed
@@ -384,6 +387,7 @@ lsof -p $SERVER_PID  # Should show "No such process"
 - [X] **Never close** while another thread is polling
 
 **Template for new servers**:
+
 ```python
 manager = Manager(handler)
 manager.listen(url, http=True)

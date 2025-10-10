@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [0.1.3]
 
 ### Added
+
 - **Example Implementations - Priority 5: Advanced Features** (17/17 examples complete - ALL EXAMPLES COMPLETE!):
   - **TLS HTTPS Server** (`tests/examples/advanced/tls_https_server.py`):
     - TLS/SSL certificate-based encryption for HTTPS
@@ -96,6 +97,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - **Total test count**: 201 tests (up from 193)
 
 ### Changed
+
 - **Documentation updates**:
   - Updated `CLAUDE.md` with Priority 5 completion status
   - Marked all 3 Priority 5 examples as complete (17/17 total examples - COMPLETE!)
@@ -104,6 +106,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Updated test count references throughout documentation
 
 ### Fixed
+
 - **TCP Echo Test**: Fixed handler propagation issue in TCP echo test
   - Root cause: When using `manager.listen(url, handler=handler)`, the handler is only set on the listener connection, NOT on accepted connections
   - Solution: Use `Manager(default_handler)` pattern to ensure handler is applied to all connections including accepted ones
@@ -112,6 +115,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ## [0.1.2]
 
 ### Added
+
 - **Performance Optimization**: GIL (Global Interpreter Lock) management for multi-threaded scenarios
   - Added `nogil` to 21 critical C API methods for true parallel execution
   - Network operations: `send()`, `close()`, `resolve()`, `resolve_cancel()`
@@ -126,6 +130,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - **TLS Compatibility**: nogil works safely with Mongoose's built-in TLS (event-loop based, no locks)
 
 ### Changed
+
 - **Build system improvements**:
   - Separated `use_tls` and `use_nogil` configuration flags in `setup.py`
   - Both TLS and nogil can now be enabled simultaneously (previously mutually exclusive)
@@ -142,6 +147,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Created `docs/nogil_optimization_summary.md` - implementation summary
 
 ### Fixed
+
 - **Critical - nogil not working**: Fixed nogil optimization that was never actually enabled
   - Root cause: `compile_time_env` was commented out in `setup.py`, and `_mongoose.pyx` had hardcoded `DEF USE_NOGIL = 0`
   - Added `nogil` declarations to all Mongoose C functions in `mongoose.pxd`
@@ -158,6 +164,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Added
 
 #### High Priority Features (Essential Functionality)
+
 - **DNS Resolution** (`Connection.resolve()`, `Connection.resolve_cancel()`):
   - Asynchronous hostname resolution with `MG_EV_RESOLVE` event
   - Cancel in-flight DNS lookups
@@ -182,6 +189,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Attack surface analysis and best practices
 
 #### Medium Priority Features (Enhanced Capabilities)
+
 - **SNTP Time Protocol**:
   - `Manager.sntp_connect(url, handler)` - create SNTP client
   - `Connection.sntp_request()` - request network time
@@ -209,6 +217,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - 5 tests in `tests/test_http_sse.py`
 
 #### Low Priority Features (Nice-to-Have)
+
 - **TLS/SSL Configuration**:
   - `TlsOpts` class for certificate-based encryption
   - `Connection.tls_init(TlsOpts)` - initialize TLS on connection
@@ -223,6 +232,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - 5 tests in `tests/test_lowlevel.py`
 
 #### Testing & Documentation
+
 - **Comprehensive test suite**: 150+ tests with 99% pass rate
   - HTTP/HTTPS: 40 tests (server, client, headers, chunked, SSE)
   - WebSocket: 10 tests (handshake, text/binary frames)
@@ -250,11 +260,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - 5 detailed workarounds for chunked request handling
 
 ### Removed
+
 - `mg_http_delete_chunk()` - declared in Mongoose header but not implemented in library
   - Would have provided chunked request buffer cleanup
   - See `docs/mg_http_delete_chunk.md` for alternatives
 
 ### Known Issues
+
 - **Intermittent test failures** (99% pass rate, 148-150/151 tests pass):
   - `test_per_connection_handler` and `test_websocket_connection_upgrade` occasionally fail
   - Both tests pass individually - failures are non-deterministic
@@ -262,6 +274,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Not actual code bugs - test infrastructure issues (low priority)
 
 ### Fixed
+
 - **Critical**: Fixed segfault in HTTP server caused by missing GIL acquisition in event callback
   - The `_event_bridge` callback function now properly acquires the GIL using `with gil` annotation
   - This fixes crashes that occurred when handling HTTP requests, WebSocket messages, or any event callbacks
@@ -269,6 +282,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - Solution: Added `noexcept with gil` to `_event_bridge` function signature in `_mongoose.pyx:469`
 
 ### Added
+
 - **WebSocket support**: Added `Connection.ws_upgrade()` method for HTTP to WebSocket upgrade
   - Previously missing from the Python API despite being available in the C library
   - Required for WebSocket functionality - must be called on `MG_EV_HTTP_MSG` to initiate WebSocket handshake
@@ -294,12 +308,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
   - WebSocket example now shows proper upgrade pattern
 
 ### Changed
+
 - Removed "CRITICAL TODO" section from README.md (segfault issue resolved)
 - Updated WebSocket example in README.md to show required `ws_upgrade()` call
 
 ## [0.1.0] - Initial Release
 
 ### Added
+
 - Cython bindings for Mongoose that provide `Manager`, `Connection`, `HttpMessage`, and `WsMessage` types.
 - HTTP helpers for replies, static file serving, header lookup, and query parameter parsing.
 - WebSocket utilities including frame wrappers and ws_send helper with opcode constants.

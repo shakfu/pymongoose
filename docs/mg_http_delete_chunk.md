@@ -14,11 +14,12 @@ void mg_http_delete_chunk(struct mg_connection *c, struct mg_http_message *hm);
 
 The Mongoose library (as vendored in `thirdparty/mongoose/`) contains a forward declaration for `mg_http_delete_chunk` in the header file, but the function is not implemented in the source code. Attempting to link against this function results in:
 
-```
+```text
 symbol not found in flat namespace '_mg_http_delete_chunk'
 ```
 
 This appears to be a planned feature that was either:
+
 - Never implemented in this version of Mongoose
 - Removed in a refactoring
 - Only available in certain Mongoose builds/configurations
@@ -225,4 +226,4 @@ This limitation should be tracked upstream with the Mongoose project, as it affe
 - Mongoose header declaration: `thirdparty/mongoose/mongoose.h:142`
 - Missing implementation: `thirdparty/mongoose/mongoose.c` (search returns no results)
 - Related issue: [Link to GitHub issue when created]
-- Mongoose project: https://github.com/cesanta/mongoose
+- Mongoose project: <https://github.com/cesanta/mongoose>

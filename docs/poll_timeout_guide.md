@@ -5,6 +5,7 @@ Understanding `Manager.poll(timeout_ms)` and choosing the right timeout value.
 ## What is poll()?
 
 `poll()` drives the Mongoose event loop. It processes network events (connections, reads, writes) and returns after either:
+
 1. Processing all pending events, OR
 2. The timeout expires (whichever comes first)
 
@@ -35,6 +36,7 @@ while True:
 ```
 
 **Why 100ms?**
+
 - [x] Responsive Ctrl+C (exits in ~100ms)
 - [x] Minimal CPU overhead (~0.1% idle CPU)
 - [x] Fast enough for HTTP servers (sub-millisecond latency still achieved)
@@ -53,6 +55,7 @@ except KeyboardInterrupt:
 ```
 
 KeyboardInterrupt is only caught **between** poll calls, so:
+
 - `poll(100)` → Ctrl+C takes **~100ms** to respond [x]
 - `poll(1000)` → Ctrl+C takes **~1 second** to respond [X]
 - `poll(5000)` → Ctrl+C takes **~5 seconds** to respond [X][X]
@@ -90,6 +93,7 @@ All tests with `wrk -t4 -c100 -d10s`:
 | 1000ms | 60,847 | 1.69ms | ~1000ms |
 
 **Key insight**: Even 1000ms timeout only reduces throughput by 0.6% because:
+
 1. Under load, there are always pending events
 2. `poll()` returns early when events are ready
 3. The timeout only matters when idle
@@ -97,6 +101,7 @@ All tests with `wrk -t4 -c100 -d10s`:
 ### When Timeout Matters
 
 The timeout primarily affects **idle servers**:
+
 - **Under load**: poll() returns immediately with pending events
 - **Idle**: poll() waits full timeout before checking for shutdown signals
 
