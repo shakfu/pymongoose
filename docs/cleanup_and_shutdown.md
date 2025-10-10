@@ -35,7 +35,7 @@ try:
 except KeyboardInterrupt:
     print("Shutting down...")
 finally:
-    manager.close()  # ✅ Always called, even on exception
+    manager.close()  # [x] Always called, even on exception
     print("Cleanup complete")
 ```
 
@@ -54,7 +54,7 @@ manager.close()
 After `close()`, the Manager is unusable:
 ```python
 manager.close()
-manager.poll(100)  # ❌ RuntimeError: Manager has been freed
+manager.poll(100)  # [X] RuntimeError: Manager has been freed
 ```
 
 ## Production Pattern: Signal Handlers
@@ -191,7 +191,7 @@ except KeyboardInterrupt:
 
 ## Common Mistakes
 
-### ❌ DON'T: Forget cleanup
+### [X] DON'T: Forget cleanup
 
 ```python
 # BAD: No cleanup on exit
@@ -199,10 +199,10 @@ manager = Manager(handler)
 manager.listen('http://0.0.0.0:8000', http=True)
 
 while True:
-    manager.poll(100)  # ❌ Ctrl+C leaves resources open
+    manager.poll(100)  # [X] Ctrl+C leaves resources open
 ```
 
-### ❌ DON'T: Close while polling thread is active
+### [X] DON'T: Close while polling thread is active
 
 ```python
 # BAD: Race condition
@@ -214,10 +214,10 @@ thread = threading.Thread(target=run_server, daemon=True)
 thread.start()
 
 # ... later ...
-manager.close()  # ❌ Thread might be in poll()! Segfault risk!
+manager.close()  # [X] Thread might be in poll()! Segfault risk!
 ```
 
-### ❌ DON'T: Reuse closed Manager
+### [X] DON'T: Reuse closed Manager
 
 ```python
 # BAD: Manager is single-use
@@ -225,10 +225,10 @@ manager = Manager(handler)
 manager.listen('http://0.0.0.0:8000', http=True)
 manager.close()
 
-manager.listen('http://0.0.0.0:8001', http=True)  # ❌ RuntimeError!
+manager.listen('http://0.0.0.0:8001', http=True)  # [X] RuntimeError!
 ```
 
-### ✅ DO: Stop polling before closing
+### [x] DO: Stop polling before closing
 
 ```python
 # GOOD: Coordinated shutdown
@@ -244,7 +244,7 @@ thread.start()
 # ... later ...
 stop_flag.set()  # Signal thread to stop
 thread.join()    # Wait for thread to exit
-manager.close()  # ✅ Safe to close now
+manager.close()  # [x] Safe to close now
 ```
 
 ## Graceful Shutdown Checklist
@@ -376,12 +376,12 @@ lsof -p $SERVER_PID  # Should show "No such process"
 
 ## Summary
 
-- ✅ **Always use try/finally** to ensure `manager.close()` is called
-- ✅ **Handle both SIGINT and SIGTERM** for production servers
-- ✅ **Stop polling before closing** in multi-threaded code
-- ✅ **Log shutdown events** for debugging
-- ❌ **Never reuse** a closed Manager
-- ❌ **Never close** while another thread is polling
+- [x] **Always use try/finally** to ensure `manager.close()` is called
+- [x] **Handle both SIGINT and SIGTERM** for production servers
+- [x] **Stop polling before closing** in multi-threaded code
+- [x] **Log shutdown events** for debugging
+- [X] **Never reuse** a closed Manager
+- [X] **Never close** while another thread is polling
 
 **Template for new servers**:
 ```python

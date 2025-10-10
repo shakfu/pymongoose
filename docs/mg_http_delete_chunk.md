@@ -54,14 +54,14 @@ def handler(conn, ev, data):
 
 The absence of this function has **limited practical impact** for most use cases:
 
-### ✅ No Impact - Normal HTTP Operations
+### [x] No Impact - Normal HTTP Operations
 
 - **Regular HTTP requests**: Fully buffered before `MG_EV_HTTP_MSG` fires - no issue
 - **HTTP responses**: Chunked sending works perfectly via `Connection.http_chunk()`
 - **Small to medium uploads**: Mongoose buffers automatically, no memory issues
 - **WebSocket/MQTT**: Use different protocols, not affected
 
-### ⚠️ Medium Impact - Large Chunked Uploads
+### [!] Medium Impact - Large Chunked Uploads
 
 - **Very large chunked requests**: Entire request accumulates in memory
 - **Streaming request processing**: Cannot process and discard chunks incrementally
@@ -204,11 +204,11 @@ This is an **upstream Mongoose issue**, not a pymongoose wrapper issue.
 
 Available alternatives in Mongoose/pymongoose:
 
-- `mg_http_write_chunk()` ✅ - Send chunked responses (implemented)
-- `mg_http_printf_chunk()` ✅ - Send formatted chunks (declared, not wrapped)
-- `conn.recv_data()` ✅ - Read receive buffer (pymongoose extension)
-- `conn.recv_len` ✅ - Check buffer size (pymongoose extension)
-- `conn.is_full` ✅ - Check backpressure (pymongoose extension)
+- `mg_http_write_chunk()` [x] - Send chunked responses (implemented)
+- `mg_http_printf_chunk()` [x] - Send formatted chunks (declared, not wrapped)
+- `conn.recv_data()` [x] - Read receive buffer (pymongoose extension)
+- `conn.recv_len` [x] - Check buffer size (pymongoose extension)
+- `conn.is_full` [x] - Check backpressure (pymongoose extension)
 
 ## Conclusion
 

@@ -5,14 +5,14 @@
 When closing HTTP connections from the server side, there are two methods:
 
 - **`conn.close()`**: Immediate close (may lose buffered data)
-- **`conn.drain()`**: Graceful close (flushes data first) ✅ **Recommended**
+- **`conn.drain()`**: Graceful close (flushes data first) [x] **Recommended**
 
 ## The Problem
 
 If you close a connection immediately after sending a response, the client may not receive the full data:
 
 ```python
-# ❌ BAD: May not send complete response
+# [X] BAD: May not send complete response
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
         conn.reply(200, b"Large response..." * 1000)
@@ -26,7 +26,7 @@ The issue: `close()` immediately tears down the connection, even if there's data
 Use `conn.drain()` to mark the connection for graceful shutdown:
 
 ```python
-# ✅ GOOD: Ensures response is fully sent
+# [x] GOOD: Ensures response is fully sent
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
         conn.reply(200, b"Large response..." * 1000)
@@ -60,9 +60,9 @@ def drain(self):
 ```
 
 **When to use**:
-- ✅ After sending HTTP response
-- ✅ After sending last WebSocket message
-- ✅ When you want client to receive all data
+- [x] After sending HTTP response
+- [x] After sending last WebSocket message
+- [x] When you want client to receive all data
 
 ### conn.close()
 
@@ -75,9 +75,9 @@ def close(self):
 ```
 
 **When to use**:
-- ⚠️ Handling protocol violations
-- ⚠️ Malicious connections (timeout/abuse)
-- ⚠️ Emergency shutdown
+- [!] Handling protocol violations
+- [!] Malicious connections (timeout/abuse)
+- [!] Emergency shutdown
 
 **Avoid for normal responses** - use `drain()` instead.
 
@@ -204,39 +204,39 @@ def handler(conn, ev, data):
 
 ## Common Mistakes
 
-### ❌ DON'T: Drain after every response (HTTP/1.1)
+### [X] DON'T: Drain after every response (HTTP/1.1)
 
 ```python
 # BAD: Prevents connection reuse
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
         conn.reply(200, b"OK")
-        conn.drain()  # ❌ Closes connection every time
+        conn.drain()  # [X] Closes connection every time
 ```
 
 This disables HTTP keep-alive and forces new connections for each request.
 
-### ❌ DON'T: Use close() for normal responses
+### [X] DON'T: Use close() for normal responses
 
 ```python
 # BAD: May lose data
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
         conn.reply(200, large_response)
-        conn.close()  # ❌ Immediate close may truncate response
+        conn.close()  # [X] Immediate close may truncate response
 ```
 
-### ✅ DO: Use drain() when closing from server
+### [x] DO: Use drain() when closing from server
 
 ```python
 # GOOD: Ensures complete data delivery
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
         conn.reply(200, large_response)
-        conn.drain()  # ✅ Graceful close
+        conn.drain()  # [x] Graceful close
 ```
 
-### ✅ DO: Let HTTP keep-alive manage connections
+### [x] DO: Let HTTP keep-alive manage connections
 
 ```python
 # GOOD: Connection reuse enabled
@@ -278,9 +278,9 @@ This ensures buffered data is flushed before closing.
 
 | Method | Use Case | Data Loss Risk | Latency |
 |--------|----------|----------------|---------|
-| `conn.drain()` | ✅ Normal server-initiated close | None | +1-10ms |
-| `conn.close()` | ⚠️ Emergency/protocol violation | Possible | Instant |
-| *(no call)* | ✅ HTTP keep-alive | N/A | N/A |
+| `conn.drain()` | [x] Normal server-initiated close | None | +1-10ms |
+| `conn.close()` | [!] Emergency/protocol violation | Possible | Instant |
+| *(no call)* | [x] HTTP keep-alive | N/A | N/A |
 
 **Default recommendation**: Use `drain()` when you need to close a connection after sending data. Otherwise, let HTTP keep-alive manage connections automatically.
 

@@ -8,11 +8,11 @@ manager.listen('http://0.0.0.0:8000', http=True)
 
 try:
     while True:
-        manager.poll(100)  # ✅ 100ms for responsive Ctrl+C
+        manager.poll(100)  # [x] 100ms for responsive Ctrl+C
 except KeyboardInterrupt:
     print("Shutting down...")
 finally:
-    manager.close()  # ✅ Always cleanup
+    manager.close()  # [x] Always cleanup
 ```
 
 ## Two Key Issues Fixed
@@ -24,11 +24,11 @@ finally:
 **Solution**: Use `poll(100)` for ~100ms shutdown response
 
 ```python
-# ❌ BEFORE: Takes up to 1 second to exit
+# [X] BEFORE: Takes up to 1 second to exit
 while True:
     manager.poll(1000)
 
-# ✅ AFTER: Exits in ~100ms
+# [x] AFTER: Exits in ~100ms
 while True:
     manager.poll(100)
 ```
@@ -42,13 +42,13 @@ while True:
 **Solution**: Use try/finally to guarantee cleanup
 
 ```python
-# ❌ BEFORE: No cleanup on Ctrl+C
+# [X] BEFORE: No cleanup on Ctrl+C
 manager = Manager(handler)
 manager.listen('http://0.0.0.0:8000', http=True)
 while True:
     manager.poll(100)
 
-# ✅ AFTER: Cleanup guaranteed
+# [x] AFTER: Cleanup guaranteed
 manager = Manager(handler)
 manager.listen('http://0.0.0.0:8000', http=True)
 try:
@@ -116,7 +116,7 @@ manager.close()      # Safe to close now
 
 ## Common Mistakes
 
-| ❌ DON'T | ✅ DO |
+| [X] DON'T | [x] DO |
 |---------|------|
 | `poll(1000)` - slow Ctrl+C | `poll(100)` - responsive |
 | No try/finally - leaks resources | Always use try/finally |
@@ -136,9 +136,9 @@ python your_server.py
 ## Complete Example
 
 See `benchmarks/demo_server.py` for a working example with:
-- ✅ Responsive Ctrl+C (`poll(100)`)
-- ✅ Proper cleanup (`try`/`finally`)
-- ✅ User-friendly messages
+- [x] Responsive Ctrl+C (`poll(100)`)
+- [x] Proper cleanup (`try`/`finally`)
+- [x] User-friendly messages
 
 ---
 

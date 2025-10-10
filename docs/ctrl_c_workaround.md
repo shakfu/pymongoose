@@ -37,9 +37,9 @@ finally:
 ```
 
 **Pros**:
-- ✅ Reliable and fast
-- ✅ Works with both SIGINT and SIGTERM
-- ✅ Production-ready pattern
+- [x] Reliable and fast
+- [x] Works with both SIGINT and SIGTERM
+- [x] Production-ready pattern
 
 **Cons**:
 - Requires explicit signal handler setup
@@ -62,12 +62,12 @@ finally:
 ```
 
 **Pros**:
-- ✅ Simple, no signal handler needed
-- ✅ May work depending on timing
+- [x] Simple, no signal handler needed
+- [x] May work depending on timing
 
 **Cons**:
-- ❌ Not reliable - Ctrl+C might not be caught
-- ❌ Depends on when signal arrives relative to poll() call
+- [X] Not reliable - Ctrl+C might not be caught
+- [X] Depends on when signal arrives relative to poll() call
 
 ## Solution 3: Periodic Signal Check
 
@@ -97,15 +97,15 @@ finally:
 - Works around nogil signal deferral
 
 **Cons**:
-- ❌ Complex and hacky
-- ❌ Not recommended
+- [X] Complex and hacky
+- [X] Not recommended
 
 ## Why Not Remove nogil?
 
 Removing `nogil` from `poll()` would fix Ctrl+C but:
-- ❌ Loses 30-40% throughput (benchmark shows 60k → 40k req/sec)
-- ❌ Prevents true parallelism
-- ❌ Makes multi-threaded servers slower
+- [X] Loses 30-40% throughput (benchmark shows 60k → 40k req/sec)
+- [X] Prevents true parallelism
+- [X] Makes multi-threaded servers slower
 
 The tradeoff isn't worth it - use Solution 1 instead.
 
@@ -169,10 +169,10 @@ if __name__ == "__main__":
 ```
 
 This pattern:
-- ✅ Handles Ctrl+C reliably
-- ✅ Handles SIGTERM (systemd, Docker)
-- ✅ Keeps nogil optimization
-- ✅ Always cleans up resources
+- [x] Handles Ctrl+C reliably
+- [x] Handles SIGTERM (systemd, Docker)
+- [x] Keeps nogil optimization
+- [x] Always cleans up resources
 
 ## Summary
 

@@ -102,7 +102,7 @@ Added comments explaining Python bytes object lifetime with nogil:
 
 ## Test Results
 
-✅ **All 151 tests passing**
+[x] **All 151 tests passing**
 - 8 harmless thread cleanup warnings (documented in CLAUDE.md)
 - No regressions introduced
 - Performance improvements validated

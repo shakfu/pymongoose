@@ -14,14 +14,14 @@ The `Connection.http_basic_auth()` method implements HTTP Basic Authentication (
 
 ### Recommended Usage
 
-✅ **SAFE - Always use HTTPS for authentication:**
+[x] **SAFE - Always use HTTPS for authentication:**
 ```python
 # Credentials are encrypted by TLS
 conn = manager.connect("https://api.example.com/", http=True)
 conn.http_basic_auth("username", "password")
 ```
 
-❌ **UNSAFE - Never send credentials over HTTP:**
+[X] **UNSAFE - Never send credentials over HTTP:**
 ```python
 # Credentials visible to anyone monitoring the network
 conn = manager.connect("http://api.example.com/", http=True)
@@ -68,10 +68,10 @@ When using TLS connections, Mongoose validates server certificates by default. T
 The `Connection.error()` method triggers error events with error messages. Be careful not to expose sensitive information:
 
 ```python
-# ❌ BAD - Exposes internal paths/details
+# [X] BAD - Exposes internal paths/details
 conn.error(f"Database connection failed: {db_password}")
 
-# ✅ GOOD - Generic error message
+# [x] GOOD - Generic error message
 conn.error("Authentication failed")
 ```
 
@@ -146,7 +146,7 @@ conn = manager.mqtt_connect(
 3. **Client ID randomization** - Prevent client ID spoofing
 
 ```python
-# ✅ SECURE - MQTT over TLS
+# [x] SECURE - MQTT over TLS
 conn = manager.mqtt_connect(
     "mqtts://broker.example.com:8883",
     client_id=generate_random_id(),
@@ -243,11 +243,11 @@ When serving files, validate paths:
 ```python
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
-        # ❌ DANGEROUS - Path traversal vulnerability
+        # [X] DANGEROUS - Path traversal vulnerability
         file_path = data.uri  # Could be "../../../../etc/passwd"
         conn.serve_file(data, file_path)
 
-        # ✅ SAFE - Validate and sanitize path
+        # [x] SAFE - Validate and sanitize path
         file_path = sanitize_path(data.uri)
         if not is_safe_path(file_path, ALLOWED_DIR):
             conn.reply(403, b"Forbidden")
@@ -259,11 +259,11 @@ def handler(conn, ev, data):
 Never pass unsanitized input to system commands:
 
 ```python
-# ❌ DANGEROUS
+# [X] DANGEROUS
 filename = data.query_var("file")
 os.system(f"cat {filename}")  # Command injection!
 
-# ✅ SAFE - Validate and use safe APIs
+# [x] SAFE - Validate and use safe APIs
 filename = sanitize_filename(data.query_var("file"))
 with open(filename, 'r') as f:
     content = f.read()
@@ -273,11 +273,11 @@ with open(filename, 'r') as f:
 Escape HTML output:
 
 ```python
-# ❌ DANGEROUS - XSS vulnerability
+# [X] DANGEROUS - XSS vulnerability
 user_input = data.query_var("name")
 conn.reply(200, f"<html>Hello {user_input}</html>")
 
-# ✅ SAFE - Escape HTML
+# [x] SAFE - Escape HTML
 import html
 user_input = data.query_var("name")
 safe_input = html.escape(user_input)

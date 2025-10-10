@@ -204,8 +204,8 @@ Checked in multiple methods but not atomic. If used from multiple threads, could
 
 ## Priority Recommendations
 
-### ✅ **Immediate (Performance Critical)** - COMPLETED:
-1. ✅ Add `nogil` to all C API calls that support it (21 methods total)
+### [x] **Immediate (Performance Critical)** - COMPLETED:
+1. [x] Add `nogil` to all C API calls that support it (21 methods total)
    - Network: `send()`, `close()`, `resolve()`, `resolve_cancel()`
    - WebSocket: `ws_send()`, `ws_upgrade()`
    - MQTT: `mqtt_pub()`, `mqtt_sub()`, `mqtt_ping()`, `mqtt_pong()`, `mqtt_disconnect()`
@@ -214,17 +214,17 @@ Checked in multiple methods but not atomic. If used from multiple threads, could
    - Utilities: `sntp_request()`, `http_basic_auth()`, `error()`
    - Properties: `local_addr`, `remote_addr` (with `ntohs()`)
    - Thread-safe: `Manager.wakeup()`
-2. ✅ Fix duplicate `is_tls` property (removed duplicate at line 736)
+2. [x] Fix duplicate `is_tls` property (removed duplicate at line 736)
 
-### ✅ **Short-term (Robustness)** - COMPLETED:
-3. ✅ Document buffer size limitations (256-byte query params in `HttpMessage.query_var()`)
-4. ✅ Add memory lifetime comments for encode() patterns with nogil
+### [x] **Short-term (Robustness)** - COMPLETED:
+3. [x] Document buffer size limitations (256-byte query params in `HttpMessage.query_var()`)
+4. [x] Add memory lifetime comments for encode() patterns with nogil
    - Added to `reply()`, `serve_dir()`, `serve_file()`, `ws_upgrade()`
-5. ✅ Document `_freed` flag thread safety considerations
+5. [x] Document `_freed` flag thread safety considerations
    - Added thread safety notes to `poll()` and `wakeup()` methods
 
-### ✅ **Documentation** - COMPLETED:
-6. ✅ Document timer auto-deletion design choice
+### [x] **Documentation** - COMPLETED:
+6. [x] Document timer auto-deletion design choice
    - Added notes to `Manager.timer_add()` and `Timer` class docstrings
 
 ### **Long-term (Optimization)** - FUTURE WORK:
