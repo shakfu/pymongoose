@@ -38,10 +38,10 @@ def run_server(port: int = 8001):
     try:
         while not shutdown_requested:
             manager.poll(100)
-        print("\n✋ Shutting down...")
+        print("\n Shutting down...")
     finally:
         manager.close()  # Clean up resources
-        print("✅ Server stopped cleanly")
+        print("[x] Server stopped cleanly")
 
 
 if __name__ == "__main__":

@@ -43,9 +43,9 @@ def test_http_server():
     try:
         response = urllib.request.urlopen(f"http://127.0.0.1:{port}/test", timeout=2)
         assert response.status == 200
-        print("✓ HTTP server responded successfully")
+        print("[x] HTTP server responded successfully")
     except Exception as e:
-        print(f"✗ Request failed: {e}")
+        print(f" Request failed: {e}")
         stop.set()
         manager.close()
         return False
@@ -57,7 +57,7 @@ def test_http_server():
 
     # Verify request was received
     assert "/test" in received, f"Expected /test in {received}"
-    print(f"✓ Server received request: {received}")
+    print(f"[x] Server received request: {received}")
 
     return True
 

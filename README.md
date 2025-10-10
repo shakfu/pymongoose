@@ -28,9 +28,11 @@ Python bindings for the Mongoose embedded networking library, built with Cython.
 - **Event-driven**: Non-blocking I/O with a simple event loop
 - **Low overhead**: Thin Cython wrapper over native C library
 - **Python 3.9+**: Modern Python with type hints
-- **Comprehensive**: 150+ tests with 99% pass rate
+- **Comprehensive**: 210 tests, 100% pass rate
+- **Production Examples**: 17 complete examples from Mongoose tutorials
 - **TLS Support**: Built-in TLS/SSL encryption (MG_TLS_BUILTIN)
-- **GIL Management**: Conditional `nogil` support (automatically disabled when TLS is enabled)
+- **GIL Optimization**: 21 methods release GIL for true parallel execution
+- **High Performance**: 60k+ req/sec (6-37x faster than pure Python frameworks)
 
 ## Installation
 
@@ -147,6 +149,45 @@ finally:
     mgr.close()
 ```
 
+## Examples
+
+The project includes **17 complete, production-ready examples** translated from Mongoose C tutorials:
+
+### Priority 1: Core HTTP/WebSocket (4 examples)
+- **HTTP Server** - Static files, TLS, multipart uploads, REST API
+- **HTTP Client** - GET/POST, TLS, timeouts, custom headers
+- **WebSocket Server** - Echo, mixed HTTP+WS, client tracking
+- **WebSocket Broadcasting** - Timer-based broadcasts to multiple clients
+
+### Priority 2: MQTT (2 examples)
+- **MQTT Client** - Pub/sub, QoS, reconnection, keepalive
+- **MQTT Broker** - Message routing, topic matching, subscriptions
+
+### Priority 3: Specialized HTTP (4 examples)
+- **HTTP Streaming** - Chunked transfer encoding, large responses
+- **HTTP File Upload** - Disk streaming, multipart forms
+- **RESTful Server** - JSON API, CRUD operations, routing
+- **Server-Sent Events** - Real-time push updates
+
+### Priority 4: Network Protocols (4 examples)
+- **SNTP Client** - Network time sync over UDP
+- **DNS Client** - Async hostname resolution
+- **TCP Echo Server** - Raw TCP sockets, custom protocols
+- **UDP Echo Server** - Connectionless datagrams
+
+### Priority 5: Advanced Features (3 examples)
+- **TLS HTTPS Server** - Certificate-based encryption, SNI
+- **HTTP Proxy Client** - CONNECT method tunneling
+- **Multi-threaded Server** - Background workers, `Manager.wakeup()`
+
+**All examples include:**
+- Production-ready patterns (signal handlers, graceful shutdown)
+- Command-line arguments for flexibility
+- Comprehensive test coverage (42 tests)
+- Detailed documentation with C tutorial references
+
+See `tests/examples/README.md` for usage instructions and `tests/examples/` for source code.
+
 ## API Reference
 
 ### Manager
@@ -209,9 +250,10 @@ conn.tls_free()                    # Free TLS resources
 conn.resolve(url)                  # Async DNS lookup
 conn.resolve_cancel()              # Cancel DNS lookup
 
-# Low-level
+# Connection management
+conn.drain()                       # Graceful close (flush buffer first)
+conn.close()                       # Immediate close
 conn.error(message)                # Trigger error event
-conn.close()                       # Close connection
 
 # Properties
 conn.is_listening      # Listener socket?
@@ -336,9 +378,11 @@ http_parse_multipart(body, offset=0)   # Parse multipart data
 
 ## Testing
 
-The project includes a comprehensive test suite with **150+ tests** covering:
+The project includes a comprehensive test suite with **210 tests** (100% passing):
 
 ### Test Coverage by Feature
+
+**Core Functionality (168 tests):**
 - **HTTP/HTTPS**: Server, client, headers, query params, chunked encoding, SSE (40 tests)
 - **WebSocket**: Handshake, text/binary frames, opcodes (10 tests)
 - **MQTT**: Connect, publish, subscribe, ping/pong, disconnect (11 tests)
@@ -351,21 +395,32 @@ The project includes a comprehensive test suite with **150+ tests** covering:
 - **Connection State**: Lifecycle, properties, events (15+ tests)
 - **Security**: HTTP Basic Auth, TLS properties (6 tests)
 - **Utilities**: URL encoding, multipart forms, wakeup (10 tests)
+- **Flow Control**: Drain, backpressure (4 tests)
+
+**Example Tests (42 tests):**
+- Priority 1: HTTP/WebSocket examples (5 tests)
+- Priority 2: MQTT examples (7 tests)
+- Priority 3: Specialized HTTP examples (7 tests)
+- Priority 4: Network protocols (8 tests)
+- Priority 5: Advanced features (9 tests)
+- README example validation (1 test)
+- WebSocket broadcast examples (5 tests)
 
 ### Running Tests
 
 ```bash
-make test                              # Run all tests
+make test                              # Run all tests (210 tests)
 PYTHONPATH=src pytest tests/ -v        # Verbose output
 pytest tests/test_http_server.py -v    # Run specific file
 pytest tests/ -k "test_timer" -v       # Run matching tests
+pytest tests/examples/ -v              # Run example tests only
 ```
 
 ### Test Infrastructure
 - Dynamic port allocation prevents conflicts
 - Background polling threads for async operations
 - Proper cleanup in finally blocks
-- 99% pass rate with minimal intermittent failures
+- 100% pass rate (210/210 tests passing)
 - WebSocket tests require `websocket-client` (`uv add --dev websocket-client`)
 
 ## Development
@@ -402,13 +457,31 @@ make clean          # Remove build artifacts
 
 ### Performance Optimization
 
-The wrapper is optimized for multi-threaded scenarios:
-- **21 methods with `nogil`**: Network I/O, WebSocket, MQTT, HTTP, and TLS operations release the GIL
-- **True parallel execution**: Multiple threads can process requests concurrently
-- **Zero GIL contention**: C operations run without blocking Python threads
-- **Thread-safe wakeup**: Cross-thread communication via `Manager.wakeup()`
+The wrapper achieves **C-level performance** through aggressive optimization:
 
-See `docs/nogil_optimization_summary.md` for implementation details.
+**GIL Release (`nogil`):**
+- **21 critical methods release GIL** for true parallel execution
+- Network: `send()`, `close()`, `resolve()`, `resolve_cancel()`
+- WebSocket: `ws_send()`, `ws_upgrade()`
+- MQTT: `mqtt_pub()`, `mqtt_sub()`, `mqtt_ping()`, `mqtt_pong()`, `mqtt_disconnect()`
+- HTTP: `reply()`, `serve_dir()`, `serve_file()`, `http_chunk()`, `http_sse()`
+- TLS: `tls_init()`, `tls_free()`
+- Utilities: `sntp_request()`, `http_basic_auth()`, `error()`
+- Properties: `local_addr`, `remote_addr`
+- Thread-safe: `Manager.wakeup()`
+
+**TLS Compatibility:**
+- TLS and `nogil` work together safely
+- Mongoose's built-in TLS is event-loop based (no internal locks)
+- Both optimizations enabled by default
+
+**Benchmark Results** (Apple Silicon, `wrk -t4 -c100 -d10s`):
+- **pymongoose**: 60,973 req/sec (1.67ms latency)
+- aiohttp: 42,452 req/sec (1.44x slower)
+- FastAPI/uvicorn: 9,989 req/sec (6.1x slower)
+- Flask: 1,627 req/sec (37.5x slower)
+
+See `docs/nogil_optimization_summary.md` and `benchmarks/RESULTS.md` for details.
 
 ## License
 

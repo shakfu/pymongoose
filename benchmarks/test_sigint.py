@@ -31,8 +31,8 @@ try:
             print("  First poll completed")
     print("ERROR: Loop completed without interrupt!")
 except KeyboardInterrupt:
-    print("✅ KeyboardInterrupt caught successfully!")
+    print("[x] KeyboardInterrupt caught successfully!")
 finally:
     print("Cleaning up...")
     manager.close()
-    print("✅ Cleanup complete")
+    print("[x] Cleanup complete")

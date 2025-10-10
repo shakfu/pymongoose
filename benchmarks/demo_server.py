@@ -39,7 +39,7 @@ def main():
     manager = Manager(handler)
     manager.listen(f'http://0.0.0.0:{port}', http=True)
 
-    print(f"🚀 pymongoose HTTP server running on http://localhost:{port}/")
+    print(f" pymongoose HTTP server running on http://localhost:{port}/")
     print(f"   Press Ctrl+C to stop")
     print(f"   USE_NOGIL optimization enabled")
     print()
@@ -47,10 +47,10 @@ def main():
     try:
         while not shutdown_requested:
             manager.poll(100)
-        print("\n✋ Shutting down...")
+        print("\n Shutting down...")
     finally:
         manager.close()  # Clean up resources
-        print("✅ Server stopped cleanly")
+        print("[x] Server stopped cleanly")
 
 if __name__ == "__main__":
     main()

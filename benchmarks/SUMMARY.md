@@ -2,7 +2,7 @@
 
 ## Status
 
-✅ **Benchmark infrastructure created and verified**
+[x] **Benchmark infrastructure created and verified**
 
 The pymongoose HTTP server works correctly and is ready for performance testing. All servers (pymongoose, aiohttp, FastAPI, Flask) are implemented and functional.
 
@@ -17,7 +17,7 @@ The pymongoose HTTP server works correctly and is ready for performance testing.
 All serve identical JSON responses for fair comparison.
 
 ### 2. Benchmark Scripts
-- **test_direct.py** - Direct validation test (✅ working)
+- **test_direct.py** - Direct validation test ([x] working)
 - **simple_load_test.py** - Python-based concurrent load test
 - **run_benchmark.py** - Full comparison runner with Apache Bench
 - **MANUAL_BENCHMARK.md** - Step-by-step manual benchmark guide
@@ -69,9 +69,9 @@ _Actual results depend on CPU, OS tuning, and system load._
 ## Verification
 
 Server correctness verified via:
-- ✅ `pytest tests/test_http_server.py` (40+ tests pass)
-- ✅ `benchmarks/test_direct.py` (direct urllib test)
-- ✅ Manual curl requests
+- [x] `pytest tests/test_http_server.py` (40+ tests pass)
+- [x] `benchmarks/test_direct.py` (direct urllib test)
+- [x] Manual curl requests
 
 ## Next Steps
 
@@ -92,10 +92,10 @@ benchmarks/
 ├── simple_benchmark.py           # ab-based benchmark (env issues)
 ├── run_benchmark.py              # Full comparison runner
 └── servers/
-    ├── pymongoose_server.py      # ✅ Ready for testing
-    ├── aiohttp_server.py         # ✅ Ready for testing
-    ├── uvicorn_server.py         # ✅ Ready for testing
-    └── flask_server.py           # ✅ Ready for testing
+    ├── pymongoose_server.py      # [x] Ready for testing
+    ├── aiohttp_server.py         # [x] Ready for testing
+    ├── uvicorn_server.py         # [x] Ready for testing
+    └── flask_server.py           # [x] Ready for testing
 ```
 
 All dependencies installed via: `uv add --dev aiohttp fastapi uvicorn flask`

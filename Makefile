@@ -45,8 +45,6 @@ clean:
 
 test:
 	@uv run pytest -v
-# 	PYTHONPATH=src uv run pytest tests/ --tb=no -q
-
 
 snap:
 	@git add --all . && git commit -m 'snap' && git push

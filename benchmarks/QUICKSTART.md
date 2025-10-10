@@ -14,7 +14,7 @@ uv run python benchmarks/demo_server.py
 
 You should see:
 ```
-🚀 pymongoose HTTP server running on http://localhost:8765/
+ pymongoose HTTP server running on http://localhost:8765/
    Press Ctrl+C to stop
    USE_NOGIL optimization enabled
 ```
@@ -39,7 +39,7 @@ Running 10s test @ http://localhost:8765/
     Latency     3.45ms    2.12ms  25.34ms   87.23%
     Req/Sec     7.82k     1.23k   10.45k    68.91%
   312456 requests in 10.00s, 61.23MB read
-Requests/sec:  31245.67  👈 THIS IS THE KEY NUMBER
+Requests/sec:  31245.67   THIS IS THE KEY NUMBER
 Transfer/sec:      6.12MB
 ```
 
@@ -52,7 +52,7 @@ Transfer/sec:      6.12MB
 ## Typical Results
 
 On a modern Mac (M1/M2/M3):
-- **pymongoose**: 20,000-40,000 req/sec 🚀
+- **pymongoose**: 20,000-40,000 req/sec 
 - **aiohttp**: 10,000-20,000 req/sec
 - **FastAPI**: 8,000-15,000 req/sec
 - **Flask**: 3,000-8,000 req/sec
@@ -114,7 +114,7 @@ cd wrk && make
 
 ## Next Steps
 
-1. ✅ Run the benchmark above
+1. [x] Run the benchmark above
 2. Compare with other frameworks
 3. Share your results!
 4. See `MANUAL_BENCHMARK.md` for advanced options

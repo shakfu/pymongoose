@@ -2,7 +2,7 @@
 
 HTTP server performance benchmarks comparing pymongoose against popular Python web frameworks.
 
-## ⚡ Quick Start (2 minutes)
+##  Quick Start (2 minutes)
 
 ```bash
 # 1. Install wrk
@@ -21,11 +21,11 @@ wrk -t4 -c100 -d10s http://localhost:8765/
 
 ## Why wrk?
 
-- ✅ **Works reliably** on all platforms
-- ✅ **Industry standard** HTTP benchmarking tool
-- ✅ **Accurate measurements** of throughput and latency
-- ❌ Python-based benchmarks have threading/concurrency issues
-- ❌ Apache Bench (`ab`) has bugs on macOS
+- [x] **Works reliably** on all platforms
+- [x] **Industry standard** HTTP benchmarking tool
+- [x] **Accurate measurements** of throughput and latency
+- [X] Python-based benchmarks have threading/concurrency issues
+- [X] Apache Bench (`ab`) has bugs on macOS
 
 ## Automated Benchmarks (Experimental)
 

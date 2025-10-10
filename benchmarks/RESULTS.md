@@ -21,7 +21,7 @@ Official performance comparison of pymongoose vs popular Python web frameworks.
 
 ## Detailed Results
 
-### pymongoose: 60,973 req/sec 🏆
+### pymongoose: 60,973 req/sec 
 
 ```
 wrk -t4 -c100 -d10s http://localhost:8765/
@@ -36,11 +36,11 @@ Transfer/sec:      8.49MB
 ```
 
 **Analysis**:
-- ✅ **60,973 req/sec** - Exceptional throughput
-- ✅ **1.67ms avg latency** - C-level performance
-- ✅ **99.8% requests < 2.74ms** - Consistent low latency
-- ✅ **Zero errors** - Perfect stability
-- ⚡ **USE_NOGIL=1** enabled - True parallel processing
+- [x] **60,973 req/sec** - Exceptional throughput
+- [x] **1.67ms avg latency** - C-level performance
+- [x] **99.8% requests < 2.74ms** - Consistent low latency
+- [x] **Zero errors** - Perfect stability
+-  **USE_NOGIL=1** enabled - True parallel processing
 
 ### aiohttp: 42,452 req/sec
 
@@ -177,10 +177,10 @@ For user-facing APIs where latency matters:
 
 | Framework | Avg Latency | User Experience |
 |-----------|-------------|-----------------|
-| pymongoose | 1.67ms | ⚡ Instant |
-| aiohttp | 2.56ms | ⚡ Very fast |
-| FastAPI | 9.96ms | ✅ Acceptable |
-| Flask | 22.15ms | ⚠️ Noticeable delay |
+| pymongoose | 1.67ms |  Instant |
+| aiohttp | 2.56ms |  Very fast |
+| FastAPI | 9.96ms | [x] Acceptable |
+| Flask | 22.15ms | [!] Noticeable delay |
 
 ## Why pymongoose Is So Fast
 
@@ -214,10 +214,10 @@ For user-facing APIs where latency matters:
 **pymongoose provides C-level HTTP performance with Python convenience.**
 
 Key metrics:
-- ✅ **60,973 req/sec** - 6-37x faster than pure Python frameworks
-- ✅ **1.67ms latency** - Comparable to C/Go web servers
-- ✅ **Zero errors** - Production-ready stability
-- ✅ **6-31x cost savings** - Massive infrastructure reduction
+- [x] **60,973 req/sec** - 6-37x faster than pure Python frameworks
+- [x] **1.67ms latency** - Comparable to C/Go web servers
+- [x] **Zero errors** - Production-ready stability
+- [x] **6-31x cost savings** - Massive infrastructure reduction
 
 For high-performance HTTP servers in Python, pymongoose is the clear choice.
 

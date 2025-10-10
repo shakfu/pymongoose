@@ -40,6 +40,6 @@ except KeyboardInterrupt:
 finally:
     print("Calling manager.close()...")
     manager.close()
-    print("✅ Cleanup complete - Manager closed successfully")
+    print("[x] Cleanup complete - Manager closed successfully")
 
 print("\nTest passed! Cleanup works correctly.")

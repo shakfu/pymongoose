@@ -364,26 +364,26 @@ def test_sse_event_format():
 if __name__ == "__main__":
     # Run tests
     test_streaming_client_can_import()
-    print("✓ test_streaming_client_can_import")
+    print("[x] test_streaming_client_can_import")
 
     test_streaming_client_url_parsing()
-    print("✓ test_streaming_client_url_parsing")
+    print("[x] test_streaming_client_url_parsing")
 
     test_file_upload_basic_server()
-    print("✓ test_file_upload_basic_server")
+    print("[x] test_file_upload_basic_server")
 
     import tempfile
     with tempfile.TemporaryDirectory() as tmp_dir:
         test_file_upload_to_disk(Path(tmp_dir))
-    print("✓ test_file_upload_to_disk")
+    print("[x] test_file_upload_to_disk")
 
     test_restful_server_api_endpoints()
-    print("✓ test_restful_server_api_endpoints")
+    print("[x] test_restful_server_api_endpoints")
 
     test_sse_server_basic()
-    print("✓ test_sse_server_basic")
+    print("[x] test_sse_server_basic")
 
     test_sse_event_format()
-    print("✓ test_sse_event_format")
+    print("[x] test_sse_event_format")
 
     print("\nAll Priority 3 tests passed!")

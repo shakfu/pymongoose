@@ -365,24 +365,24 @@ def test_mqtt_topic_matching():
 if __name__ == "__main__":
     # Run tests
     test_mqtt_broker_basic()
-    print("✓ test_mqtt_broker_basic")
+    print("[x] test_mqtt_broker_basic")
 
     test_mqtt_client_can_publish()
-    print("✓ test_mqtt_client_can_publish")
+    print("[x] test_mqtt_client_can_publish")
 
     test_mqtt_client_can_subscribe()
-    print("✓ test_mqtt_client_can_subscribe")
+    print("[x] test_mqtt_client_can_subscribe")
 
     test_mqtt_ping_pong()
-    print("✓ test_mqtt_ping_pong")
+    print("[x] test_mqtt_ping_pong")
 
     test_mqtt_clean_session()
-    print("✓ test_mqtt_clean_session")
+    print("[x] test_mqtt_clean_session")
 
     test_mqtt_qos_levels()
-    print("✓ test_mqtt_qos_levels")
+    print("[x] test_mqtt_qos_levels")
 
     test_mqtt_topic_matching()
-    print("✓ test_mqtt_topic_matching")
+    print("[x] test_mqtt_topic_matching")
 
     print("\nAll MQTT tests passed!")

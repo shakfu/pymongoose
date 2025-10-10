@@ -18,7 +18,7 @@ def get_free_port():
     return port
 
 def main():
-    print("🚀 pymongoose Quick Benchmark")
+    print(" pymongoose Quick Benchmark")
     print("="*60)
 
     # Start server
@@ -87,7 +87,7 @@ def main():
     print(f"Max latency:       {max_latency:.2f} ms")
     print("="*60)
 
-    print("\n💡 For concurrent load testing, use wrk:")
+    print("\n For concurrent load testing, use wrk:")
     print(f"   1. Start server: uv run python benchmarks/demo_server.py")
     print(f"   2. Install wrk:  brew install wrk")
     print(f"   3. Run test:     wrk -t4 -c100 -d10s http://localhost:8765/")

@@ -11,7 +11,7 @@ shutdown_requested = False
 def signal_handler(sig, frame):
     global shutdown_requested
     shutdown_requested = True
-    print("✅ Signal handler called!")
+    print("[x] Signal handler called!")
 
 def handler(conn, ev, data):
     if ev == MG_EV_HTTP_MSG:
@@ -41,12 +41,12 @@ try:
             print("  First poll completed")
 
     if shutdown_requested:
-        print("✅ Shutdown flag set correctly!")
+        print("[x] Shutdown flag set correctly!")
     else:
-        print("❌ Shutdown flag NOT set")
+        print("[X] Shutdown flag NOT set")
 
 finally:
     manager.close()
-    print("✅ Cleanup complete")
+    print("[x] Cleanup complete")
 
-print(f"\n{'✅ TEST PASSED' if shutdown_requested else '❌ TEST FAILED'}")
+print(f"\n{'[x] TEST PASSED' if shutdown_requested else '[X] TEST FAILED'}")

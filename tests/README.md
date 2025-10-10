@@ -53,31 +53,31 @@ pytest tests/test_http_server.py::TestHTTPServer::test_basic_http_request -v
 ## Test Coverage
 
 **HTTP Tests (25 tests - All passing):**
-- ✓ Basic HTTP server setup and teardown
-- ✓ HTTP request/response handling
-- ✓ Multiple sequential requests
-- ✓ Different URL paths
-- ✓ HTTP headers (reading and writing)
-- ✓ Query string parsing
-- ✓ Connection userdata
-- ✓ Per-connection event handlers
-- ✓ Custom response headers
-- ✓ Different body types (string, bytes, UTF-8)
-- ✓ Connection lifecycle events
-- ✓ Manager creation and cleanup
-- ✓ Error handling (invalid addresses, exceptions in handlers)
-- ✓ Constant exports
+- [x] Basic HTTP server setup and teardown
+- [x] HTTP request/response handling
+- [x] Multiple sequential requests
+- [x] Different URL paths
+- [x] HTTP headers (reading and writing)
+- [x] Query string parsing
+- [x] Connection userdata
+- [x] Per-connection event handlers
+- [x] Custom response headers
+- [x] Different body types (string, bytes, UTF-8)
+- [x] Connection lifecycle events
+- [x] Manager creation and cleanup
+- [x] Error handling (invalid addresses, exceptions in handlers)
+- [x] Constant exports
 
 **WebSocket Tests (10 tests - All passing with websocket-client):**
-- ✓ WebSocket text message echo
-- ✓ WebSocket binary message echo
-- ✓ Multiple WebSocket messages
-- ✓ WebSocket handshake events (MG_EV_WS_OPEN)
-- ✓ HTTP to WebSocket upgrade lifecycle
-- ✓ WsMessage properties (text, data, flags)
-- ✓ WsMessage binary data handling
-- ✓ WebSocket opcodes (TEXT, BINARY constants)
-- ✓ ws_send with explicit text opcode
+- [x] WebSocket text message echo
+- [x] WebSocket binary message echo
+- [x] Multiple WebSocket messages
+- [x] WebSocket handshake events (MG_EV_WS_OPEN)
+- [x] HTTP to WebSocket upgrade lifecycle
+- [x] WsMessage properties (text, data, flags)
+- [x] WsMessage binary data handling
+- [x] WebSocket opcodes (TEXT, BINARY constants)
+- [x] ws_send with explicit text opcode
 
 ## Port Management
 

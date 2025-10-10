@@ -285,27 +285,27 @@ def test_udp_echo_functionality():
 if __name__ == "__main__":
     # Run tests
     test_sntp_client_can_import()
-    print("✓ test_sntp_client_can_import")
+    print("[x] test_sntp_client_can_import")
 
     test_sntp_time_request()
-    print("✓ test_sntp_time_request")
+    print("[x] test_sntp_time_request")
 
     test_dns_client_can_import()
-    print("✓ test_dns_client_can_import")
+    print("[x] test_dns_client_can_import")
 
     test_dns_resolution_basic()
-    print("✓ test_dns_resolution_basic")
+    print("[x] test_dns_resolution_basic")
 
     test_tcp_echo_server_can_import()
-    print("✓ test_tcp_echo_server_can_import")
+    print("[x] test_tcp_echo_server_can_import")
 
     test_tcp_echo_functionality()
-    print("✓ test_tcp_echo_functionality")
+    print("[x] test_tcp_echo_functionality")
 
     test_udp_echo_server_can_import()
-    print("✓ test_udp_echo_server_can_import")
+    print("[x] test_udp_echo_server_can_import")
 
     test_udp_echo_functionality()
-    print("✓ test_udp_echo_functionality")
+    print("[x] test_udp_echo_functionality")
 
     print("\nAll Priority 4 tests passed!")

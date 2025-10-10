@@ -17,7 +17,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+## [0.1.3]
+
 ### Added
+- **Example Implementations - Priority 5: Advanced Features** (17/17 examples complete - ALL EXAMPLES COMPLETE!):
+  - **TLS HTTPS Server** (`tests/examples/advanced/tls_https_server.py`):
+    - TLS/SSL certificate-based encryption for HTTPS
+    - Self-signed certificates embedded for development
+    - Command-line arguments for custom certificates (--cert, --key, --ca)
+    - Skip verification flag for testing (--skip-verify)
+    - Multiple endpoints (/, /api/status, /api/echo)
+    - Demonstrates: `TlsOpts`, `listener.tls_init()`, `conn.is_tls`, certificate configuration
+
+  - **HTTP Proxy Client** (`tests/examples/advanced/http_proxy_client.py`):
+    - HTTP CONNECT method for proxy tunneling
+    - Two-stage connection pattern (client → proxy → target)
+    - TLS initialization after tunnel establishment
+    - URL parsing utility function
+    - Proxy authentication support (headers)
+    - Demonstrates: `MG_EV_CONNECT`, `MG_EV_READ`, manual HTTP parsing, proxy protocol
+
+  - **Multi-threaded Server** (`tests/examples/advanced/multithreaded_server.py`):
+    - Background work offloading to worker threads
+    - Fast path (single-threaded, immediate response) vs slow path (multi-threaded with delay)
+    - Thread-safe communication using `Manager.wakeup()`
+    - Connection ID pattern (pass conn.id to threads, not Connection object)
+    - Concurrent request processing demonstration
+    - Demonstrates: `Manager.wakeup()`, `MG_EV_WAKEUP`, `enable_wakeup=True`, thread coordination
+
+- **Comprehensive test suite** (`tests/examples/test_priority5_comprehensive.py`):
+  - 9 new tests covering all Priority 5 examples
+  - TLS server initialization with self-signed certificates
+  - HTTP proxy CONNECT method tunneling
+  - Multi-threaded server fast path (immediate response)
+  - Multi-threaded server wakeup mechanism (worker threads)
+  - Concurrent request processing (3 simultaneous requests)
+  - Import validation for all examples
+  - **Total test count**: 210 tests (up from 201)
+
 - **Example Implementations - Priority 4: Network Protocols** (14/17 examples complete):
   - **SNTP Client** (`tests/examples/network/sntp_client.py`):
     - Network time synchronization over UDP using Google's public time server
@@ -60,10 +97,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ### Changed
 - **Documentation updates**:
-  - Updated `CLAUDE.md` with Priority 4 completion status
-  - Marked all 4 Priority 4 examples as complete (14/17 total examples)
-  - Added file locations and test references for each example
-  - Updated progress summary: 201 tests passing
+  - Updated `CLAUDE.md` with Priority 5 completion status
+  - Marked all 3 Priority 5 examples as complete (17/17 total examples - COMPLETE!)
+  - Added file locations and test references for each Priority 5 example
+  - Updated progress summary: 210 tests passing (all passing)
+  - Updated test count references throughout documentation
 
 ### Fixed
 - **TCP Echo Test**: Fixed handler propagation issue in TCP echo test
