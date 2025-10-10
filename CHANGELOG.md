@@ -17,6 +17,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 
 ## [Unreleased]
 
+### Added
+- **Example Implementations - Priority 4: Network Protocols** (14/17 examples complete):
+  - **SNTP Client** (`tests/examples/network/sntp_client.py`):
+    - Network time synchronization over UDP using Google's public time server
+    - Timer-based periodic sync (default: 30 seconds)
+    - Boot timestamp calculation for embedded systems without RTC
+    - Command-line arguments for server URL and sync interval
+    - Demonstrates: `sntp_connect()`, `sntp_request()`, `MG_EV_SNTP_TIME`
+
+  - **DNS Resolution Client** (`tests/examples/network/dns_client.py`):
+    - Asynchronous DNS hostname lookups
+    - Periodic resolution with timer
+    - Resolution cancellation support
+    - Useful for network diagnostics and monitoring
+    - Command-line arguments for hostname, interval, and one-shot mode
+    - Demonstrates: `resolve()`, `resolve_cancel()`, `MG_EV_RESOLVE`
+
+  - **TCP Echo Server** (`tests/examples/network/tcp_echo_server.py`):
+    - Raw TCP socket handling (no HTTP layer)
+    - Server echoes received data back to client
+    - Client with timer-based reconnection (15 seconds)
+    - Demonstrates custom protocol implementation over TCP
+    - Useful for learning raw socket programming
+    - Demonstrates: `listen("tcp://...")`, `connect("tcp://...")`, `MG_EV_ACCEPT`, `MG_EV_READ`
+
+  - **UDP Echo Server** (`tests/examples/network/udp_echo_server.py`):
+    - UDP connectionless protocol demonstration
+    - Server echoes datagrams back to sender
+    - Client sends periodic datagrams
+    - Key differences from TCP explained in docstring
+    - Demonstrates: `listen("udp://...")`, `connect("udp://...")`, UDP datagram handling
+
+- **Comprehensive test suite** (`tests/examples/test_priority4_comprehensive.py`):
+  - 8 new tests covering all Priority 4 examples
+  - SNTP time request validation with real time server
+  - DNS resolution testing for google.com
+  - TCP echo functionality (bidirectional communication)
+  - UDP echo functionality (datagram exchange)
+  - Import validation for all examples
+  - **Total test count**: 201 tests (up from 193)
+
+### Changed
+- **Documentation updates**:
+  - Updated `CLAUDE.md` with Priority 4 completion status
+  - Marked all 4 Priority 4 examples as complete (14/17 total examples)
+  - Added file locations and test references for each example
+  - Updated progress summary: 201 tests passing
+
+### Fixed
+- **TCP Echo Test**: Fixed handler propagation issue in TCP echo test
+  - Root cause: When using `manager.listen(url, handler=handler)`, the handler is only set on the listener connection, NOT on accepted connections
+  - Solution: Use `Manager(default_handler)` pattern to ensure handler is applied to all connections including accepted ones
+  - This is a subtle but important pattern for TCP server implementations
+
 ## [0.1.2]
 
 ### Added
