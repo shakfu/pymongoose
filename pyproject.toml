@@ -23,6 +23,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "propcache>=0.4.1",
 ]
 
 [dependency-groups]
