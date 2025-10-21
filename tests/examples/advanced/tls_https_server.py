@@ -150,16 +150,10 @@ def http_handler(conn, ev, data):
         elif hm.uri == "/api/status":
             # Return server status as JSON
             import json
-            status = {
-                "status": "ok",
-                "tls": conn.is_tls,
-                "secure": True,
-                "version": "1.0"
-            }
+
+            status = {"status": "ok", "tls": conn.is_tls, "secure": True, "version": "1.0"}
             conn.reply(
-                200,
-                json.dumps(status, indent=2),
-                headers={"Content-Type": "application/json"}
+                200, json.dumps(status, indent=2), headers={"Content-Type": "application/json"}
             )
             conn.drain()
 
@@ -179,25 +173,24 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="HTTPS server with TLS/SSL")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
-    parser.add_argument("--cert", default=None,
-                       help="Path to certificate file (PEM format)")
-    parser.add_argument("--key", default=None,
-                       help="Path to private key file (PEM format)")
-    parser.add_argument("--ca", default=None,
-                       help="Path to CA certificate file (optional)")
-    parser.add_argument("--skip-verify", action='store_true',
-                       help="Skip certificate verification (for testing)")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument("--cert", default=None, help="Path to certificate file (PEM format)")
+    parser.add_argument("--key", default=None, help="Path to private key file (PEM format)")
+    parser.add_argument("--ca", default=None, help="Path to CA certificate file (optional)")
+    parser.add_argument(
+        "--skip-verify", action="store_true", help="Skip certificate verification (for testing)"
+    )
 
     args = parser.parse_args()
 
     # Load certificates
     if args.cert and args.key:
         print(f"Loading certificates from {args.cert} and {args.key}")
-        with open(args.cert, 'rb') as f:
+        with open(args.cert, "rb") as f:
             cert_data = f.read()
-        with open(args.key, 'rb') as f:
+        with open(args.key, "rb") as f:
             key_data = f.read()
     else:
         print("Using built-in self-signed certificate (FOR TESTING ONLY)")
@@ -207,7 +200,7 @@ def main():
     ca_data = None
     if args.ca:
         print(f"Loading CA certificate from {args.ca}")
-        with open(args.ca, 'rb') as f:
+        with open(args.ca, "rb") as f:
             ca_data = f.read()
 
     # Register signal handlers
@@ -227,7 +220,7 @@ def main():
             cert=cert_data,
             key=key_data,
             ca=ca_data if ca_data else b"",
-            skip_verification=args.skip_verify
+            skip_verification=args.skip_verify,
         )
         listener.tls_init(tls_opts)
         print(f"TLS initialized (skip_verify={args.skip_verify})")

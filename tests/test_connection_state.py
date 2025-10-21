@@ -1,4 +1,5 @@
 """Tests for connection state properties and error handling."""
+
 import pytest
 import time
 from pymongoose import Manager, MG_EV_ERROR, MG_EV_OPEN, MG_EV_HTTP_MSG
@@ -77,10 +78,7 @@ def test_connection_readable_writable():
     def handler(conn, ev, data):
         if ev == MG_EV_HTTP_MSG:
             # Record connection state when message is received
-            conn_states.append({
-                'is_readable': conn.is_readable,
-                'is_writable': conn.is_writable
-            })
+            conn_states.append({"is_readable": conn.is_readable, "is_writable": conn.is_writable})
             conn.reply(200, b"OK")
 
     try:

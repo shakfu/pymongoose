@@ -151,16 +151,32 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="MQTT client example")
-    parser.add_argument("-u", "--url", default=DEFAULT_URL,
-                       help=f"MQTT broker URL (default: {DEFAULT_URL})")
-    parser.add_argument("-p", "--pub-topic", default=DEFAULT_PUB_TOPIC,
-                       help=f"Publish topic (default: {DEFAULT_PUB_TOPIC})")
-    parser.add_argument("-s", "--sub-topic", default=DEFAULT_SUB_TOPIC,
-                       help=f"Subscribe topic (default: {DEFAULT_SUB_TOPIC})")
-    parser.add_argument("-q", "--qos", type=int, default=DEFAULT_QOS,
-                       choices=[0, 1, 2], help=f"QoS level (default: {DEFAULT_QOS})")
-    parser.add_argument("-k", "--keepalive", type=int, default=5,
-                       help="Keep-alive interval in seconds (default: 5)")
+    parser.add_argument(
+        "-u", "--url", default=DEFAULT_URL, help=f"MQTT broker URL (default: {DEFAULT_URL})"
+    )
+    parser.add_argument(
+        "-p",
+        "--pub-topic",
+        default=DEFAULT_PUB_TOPIC,
+        help=f"Publish topic (default: {DEFAULT_PUB_TOPIC})",
+    )
+    parser.add_argument(
+        "-s",
+        "--sub-topic",
+        default=DEFAULT_SUB_TOPIC,
+        help=f"Subscribe topic (default: {DEFAULT_SUB_TOPIC})",
+    )
+    parser.add_argument(
+        "-q",
+        "--qos",
+        type=int,
+        default=DEFAULT_QOS,
+        choices=[0, 1, 2],
+        help=f"QoS level (default: {DEFAULT_QOS})",
+    )
+    parser.add_argument(
+        "-k", "--keepalive", type=int, default=5, help="Keep-alive interval in seconds (default: 5)"
+    )
 
     args = parser.parse_args()
 
@@ -186,7 +202,7 @@ def main():
             3000,  # 3 seconds
             repeat=True,
             run_now=True,
-            callback=lambda: timer_callback(manager, config)
+            callback=lambda: timer_callback(manager, config),
         )
 
         print(f"MQTT Client starting...")

@@ -3,13 +3,16 @@ from pymongoose import Manager, MG_EV_HTTP_MSG
 
 shutdown_requested = False
 
+
 def signal_handler(sig, frame):
     global shutdown_requested
     shutdown_requested = True
 
+
 def handler(conn, event, data):
     if event == MG_EV_HTTP_MSG:
         conn.reply(200, "Hello, World!")
+
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)

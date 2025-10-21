@@ -1,4 +1,5 @@
 """Tests for HTTP chunked transfer encoding."""
+
 import pytest
 import urllib.request
 from pymongoose import Manager, MG_EV_HTTP_MSG
@@ -14,7 +15,7 @@ def test_http_chunk_method_exists():
         manager.poll(10)
 
         # Method should exist
-        assert hasattr(listener, 'http_chunk')
+        assert hasattr(listener, "http_chunk")
         assert callable(listener.http_chunk)
     finally:
         manager.close()
@@ -36,7 +37,7 @@ def test_http_chunked_response():
     with ServerThread(handler) as port:
         try:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
 
             # All chunks should be concatenated
             assert "First" in body

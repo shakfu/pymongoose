@@ -1,4 +1,5 @@
 """Tests for advanced MQTT features."""
+
 import pytest
 import time
 from pymongoose import Manager, MG_EV_MQTT_OPEN, MG_EV_MQTT_MSG, MG_EV_CLOSE
@@ -14,7 +15,7 @@ def test_mqtt_disconnect_method_exists():
         manager.poll(10)
 
         # Method should exist
-        assert hasattr(conn, 'mqtt_disconnect')
+        assert hasattr(conn, "mqtt_disconnect")
         assert callable(conn.mqtt_disconnect)
 
         # Should be callable without error (even if not MQTT connection)
@@ -34,7 +35,7 @@ def test_mqtt_ping_method_exists():
         conn = manager.listen("tcp://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(conn, 'mqtt_ping')
+        assert hasattr(conn, "mqtt_ping")
         assert callable(conn.mqtt_ping)
 
         conn.mqtt_ping()
@@ -53,7 +54,7 @@ def test_mqtt_pong_method_exists():
         conn = manager.listen("tcp://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(conn, 'mqtt_pong')
+        assert hasattr(conn, "mqtt_pong")
         assert callable(conn.mqtt_pong)
 
         conn.mqtt_pong()
@@ -72,7 +73,7 @@ def test_mqtt_pub_method_exists():
         conn = manager.listen("tcp://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(conn, 'mqtt_pub')
+        assert hasattr(conn, "mqtt_pub")
         assert callable(conn.mqtt_pub)
     finally:
         manager.close()
@@ -86,7 +87,7 @@ def test_mqtt_sub_method_exists():
         conn = manager.listen("tcp://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(conn, 'mqtt_sub')
+        assert hasattr(conn, "mqtt_sub")
         assert callable(conn.mqtt_sub)
     finally:
         manager.close()
@@ -97,7 +98,7 @@ def test_mqtt_connect_method_exists():
     manager = Manager()
 
     try:
-        assert hasattr(manager, 'mqtt_connect')
+        assert hasattr(manager, "mqtt_connect")
         assert callable(manager.mqtt_connect)
     finally:
         manager.close()
@@ -108,7 +109,7 @@ def test_mqtt_listen_method_exists():
     manager = Manager()
 
     try:
-        assert hasattr(manager, 'mqtt_listen')
+        assert hasattr(manager, "mqtt_listen")
         assert callable(manager.mqtt_listen)
     finally:
         manager.close()

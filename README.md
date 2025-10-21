@@ -154,35 +154,35 @@ finally:
 
 ## Examples
 
-The project includes **17 complete, production-ready examples** translated from Mongoose C tutorials:
+The project includes several complete examples translated from Mongoose C tutorials:
 
-### Core HTTP/WebSocket (4 examples)
+### Core HTTP/WebSocket
 
 - **HTTP Server** - Static files, TLS, multipart uploads, REST API
 - **HTTP Client** - GET/POST, TLS, timeouts, custom headers
 - **WebSocket Server** - Echo, mixed HTTP+WS, client tracking
 - **WebSocket Broadcasting** - Timer-based broadcasts to multiple clients
 
-### MQTT (2 examples)
+### MQTT
 
 - **MQTT Client** - Pub/sub, QoS, reconnection, keepalive
 - **MQTT Broker** - Message routing, topic matching, subscriptions
 
-### Specialized HTTP (4 examples)
+### Specialized HTTP
 
 - **HTTP Streaming** - Chunked transfer encoding, large responses
 - **HTTP File Upload** - Disk streaming, multipart forms
 - **RESTful Server** - JSON API, CRUD operations, routing
 - **Server-Sent Events** - Real-time push updates
 
-### Network Protocols (4 examples)
+### Network Protocols
 
 - **SNTP Client** - Network time sync over UDP
 - **DNS Client** - Async hostname resolution
 - **TCP Echo Server** - Raw TCP sockets, custom protocols
 - **UDP Echo Server** - Connectionless datagrams
 
-### Advanced Features (3 examples)
+### Advanced Features
 
 - **TLS HTTPS Server** - Certificate-based encryption, SNI
 - **HTTP Proxy Client** - CONNECT method tunneling
@@ -409,15 +409,15 @@ The project includes a comprehensive test suite with **210 tests** (100% passing
 - **Utilities**: URL encoding, multipart forms, wakeup (10 tests)
 - **Flow Control**: Drain, backpressure (4 tests)
 
-**Example Tests (42 tests):**
+**Example Tests:**
 
-- Priority 1: HTTP/WebSocket examples (5 tests)
-- Priority 2: MQTT examples (7 tests)
-- Priority 3: Specialized HTTP examples (7 tests)
-- Priority 4: Network protocols (8 tests)
-- Priority 5: Advanced features (9 tests)
-- README example validation (1 test)
-- WebSocket broadcast examples (5 tests)
+- HTTP/WebSocket examples
+- MQTT examples
+- Specialized HTTP examples
+- Network protocols
+- Advanced features
+- README example validation
+- WebSocket broadcast examples
 
 ### Running Tests
 

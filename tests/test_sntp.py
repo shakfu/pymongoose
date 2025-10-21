@@ -1,4 +1,5 @@
 """Tests for SNTP (time synchronization)."""
+
 import pytest
 import time
 from pymongoose import Manager, MG_EV_SNTP_TIME, MG_EV_CONNECT, MG_EV_ERROR
@@ -127,13 +128,13 @@ def test_sntp_method_exists():
 
     try:
         # Manager should have sntp_connect
-        assert hasattr(manager, 'sntp_connect')
+        assert hasattr(manager, "sntp_connect")
 
         conn = manager.sntp_connect("udp://time.google.com:123")
         manager.poll(10)
 
         # Connection should have sntp_request
-        assert hasattr(conn, 'sntp_request')
+        assert hasattr(conn, "sntp_request")
 
         # Should be callable without error
         conn.sntp_request()

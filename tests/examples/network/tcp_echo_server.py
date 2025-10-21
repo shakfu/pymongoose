@@ -137,13 +137,12 @@ def timer_callback(manager, config):
     """
     global client_conn
 
-    if client_conn is None and config.get('run_client', False):
+    if client_conn is None and config.get("run_client", False):
         # Reconnect client
         print(f"\n[TIMER] Reconnecting client to {config['connect_addr']}...")
         try:
             client_conn = manager.connect(
-                config['connect_addr'],
-                handler=lambda c, e, d: client_handler(c, e, d, config)
+                config["connect_addr"], handler=lambda c, e, d: client_handler(c, e, d, config)
             )
             print(f"[CLIENT] Connection initiated")
         except RuntimeError as e:
@@ -156,14 +155,19 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="TCP echo server and client")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen address (default: {DEFAULT_LISTEN})")
-    parser.add_argument("-c", "--connect", default=DEFAULT_CONNECT,
-                       help=f"Connect address for client (default: {DEFAULT_CONNECT})")
-    parser.add_argument("--client", action='store_true',
-                       help="Run client (connects to server)")
-    parser.add_argument("--server", action='store_true',
-                       help="Run server (listens for connections)")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen address (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument(
+        "-c",
+        "--connect",
+        default=DEFAULT_CONNECT,
+        help=f"Connect address for client (default: {DEFAULT_CONNECT})",
+    )
+    parser.add_argument("--client", action="store_true", help="Run client (connects to server)")
+    parser.add_argument(
+        "--server", action="store_true", help="Run server (listens for connections)"
+    )
 
     args = parser.parse_args()
 
@@ -174,10 +178,10 @@ def main():
 
     # Configuration
     config = {
-        'listen_addr': args.listen,
-        'connect_addr': args.connect,
-        'run_client': args.client,
-        'run_server': args.server,
+        "listen_addr": args.listen,
+        "connect_addr": args.connect,
+        "run_client": args.client,
+        "run_server": args.server,
     }
 
     # Register signal handlers
@@ -189,17 +193,17 @@ def main():
 
     try:
         # Start server if requested
-        if config['run_server']:
-            listener = manager.listen(config['listen_addr'], handler=server_handler)
+        if config["run_server"]:
+            listener = manager.listen(config["listen_addr"], handler=server_handler)
             print(f"TCP Echo Server started on {config['listen_addr']}")
 
         # Add timer for client reconnection (every 15s)
-        if config['run_client']:
+        if config["run_client"]:
             timer = manager.timer_add(
                 15000,  # 15 seconds
                 repeat=True,
                 run_now=True,  # Connect immediately
-                callback=lambda: timer_callback(manager, config)
+                callback=lambda: timer_callback(manager, config),
             )
             print(f"TCP Client will connect to {config['connect_addr']}")
 

@@ -98,8 +98,7 @@ def timer_callback(manager, config):
         print(f"Connecting to {config['server']}...")
         try:
             sntp_conn = manager.sntp_connect(
-                config['server'],
-                handler=lambda c, e, d: sntp_handler(c, e, d, config)
+                config["server"], handler=lambda c, e, d: sntp_handler(c, e, d, config)
             )
             print(f"[{sntp_conn.id}] SNTP connection created")
         except RuntimeError as e:
@@ -121,17 +120,26 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="SNTP client example")
-    parser.add_argument("-s", "--server", default=DEFAULT_SERVER,
-                       help=f"SNTP server URL (default: {DEFAULT_SERVER})")
-    parser.add_argument("-i", "--interval", type=int, default=DEFAULT_INTERVAL,
-                       help=f"Sync interval in seconds (default: {DEFAULT_INTERVAL})")
+    parser.add_argument(
+        "-s",
+        "--server",
+        default=DEFAULT_SERVER,
+        help=f"SNTP server URL (default: {DEFAULT_SERVER})",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        default=DEFAULT_INTERVAL,
+        help=f"Sync interval in seconds (default: {DEFAULT_INTERVAL})",
+    )
 
     args = parser.parse_args()
 
     # Configuration
     config = {
-        'server': args.server,
-        'interval': args.interval,
+        "server": args.server,
+        "interval": args.interval,
     }
 
     # Register signal handlers
@@ -147,7 +155,7 @@ def main():
             args.interval * 1000,  # Convert to milliseconds
             repeat=True,
             run_now=True,  # Run immediately on start
-            callback=lambda: timer_callback(manager, config)
+            callback=lambda: timer_callback(manager, config),
         )
 
         print(f"SNTP Client started")

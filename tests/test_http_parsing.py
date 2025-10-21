@@ -1,4 +1,5 @@
 """Tests for HTTP status and header parsing functions."""
+
 import pytest
 import urllib.request
 from pymongoose import Manager, MG_EV_HTTP_MSG
@@ -36,17 +37,12 @@ def test_http_header_var_method_exists():
             # Access header_var() INSIDE the handler while message is valid
             charset = data.header_var("Content-Type", "charset")
             charset_result.append(charset)
-            conn.reply(
-                200,
-                b"OK",
-                headers={"Content-Type": "text/html; charset=utf-8"}
-            )
+            conn.reply(200, b"OK", headers={"Content-Type": "text/html; charset=utf-8"})
 
     with ServerThread(handler) as port:
         # Make a request with headers
         req = urllib.request.Request(
-            f"http://localhost:{port}/",
-            headers={"Content-Type": "application/json; charset=utf-8"}
+            f"http://localhost:{port}/", headers={"Content-Type": "application/json; charset=utf-8"}
         )
         urllib.request.urlopen(req, timeout=5)
 
@@ -85,6 +81,7 @@ def test_http_status_none_when_invalid():
     """Test status() returns value for invalid/null message."""
     # Create an HttpMessage that's not assigned to anything
     from pymongoose._mongoose import HttpMessage
+
     msg = HttpMessage.__new__(HttpMessage)
     # _msg is NULL, so status() should return None
     assert msg.status() is None

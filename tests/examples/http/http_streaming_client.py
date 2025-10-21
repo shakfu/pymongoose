@@ -66,16 +66,16 @@ def parse_url(url):
         default_port = 80
 
     # Split host and path
-    if '/' in rest:
-        host_port, uri = rest.split('/', 1)
-        uri = '/' + uri
+    if "/" in rest:
+        host_port, uri = rest.split("/", 1)
+        uri = "/" + uri
     else:
         host_port = rest
-        uri = '/'
+        uri = "/"
 
     # Split host and port
-    if ':' in host_port:
-        host, port_str = host_port.rsplit(':', 1)
+    if ":" in host_port:
+        host, port_str = host_port.rsplit(":", 1)
         try:
             port = int(port_str)
         except ValueError:
@@ -98,16 +98,11 @@ def streaming_handler(conn, ev, data, config):
     """
     if ev == MG_EV_CONNECT:
         # Connected to server
-        scheme, host, port, uri = config['url_parts']
+        scheme, host, port, uri = config["url_parts"]
 
         # Send HTTP request manually
-        request = (
-            f"GET {uri} HTTP/1.1\r\n"
-            f"Connection: close\r\n"
-            f"Host: {host}\r\n"
-            "\r\n"
-        )
-        conn.send(request.encode('utf-8'))
+        request = f"GET {uri} HTTP/1.1\r\nConnection: close\r\nHost: {host}\r\n\r\n"
+        conn.send(request.encode("utf-8"))
 
         print(f"Connected to {host}:{port}", file=sys.stderr)
         print(f"Sending request for {uri}", file=sys.stderr)
@@ -117,18 +112,18 @@ def streaming_handler(conn, ev, data, config):
         # This is the key difference from normal HTTP handling:
         # we process data as it arrives instead of waiting for the full response
 
-        if not config.get('headers_parsed', False):
+        if not config.get("headers_parsed", False):
             # First read - parse headers
             recv_data = conn.recv_data()
 
             # Look for end of headers (\r\n\r\n)
-            header_end = recv_data.find(b'\r\n\r\n')
+            header_end = recv_data.find(b"\r\n\r\n")
             if header_end >= 0:
                 # Found end of headers
                 header_end += 4
 
                 # Print headers to stderr
-                headers = recv_data[:header_end].decode('utf-8', errors='ignore')
+                headers = recv_data[:header_end].decode("utf-8", errors="ignore")
                 print("Response headers:", file=sys.stderr)
                 print(headers, file=sys.stderr)
 
@@ -139,7 +134,7 @@ def streaming_handler(conn, ev, data, config):
                     sys.stdout.buffer.flush()
 
                 # Mark headers as parsed
-                config['headers_parsed'] = True
+                config["headers_parsed"] = True
             # If headers not complete yet, wait for more data
         else:
             # Headers already parsed, stream body to stdout
@@ -151,13 +146,13 @@ def streaming_handler(conn, ev, data, config):
     elif ev == MG_EV_CLOSE:
         # Connection closed
         print("\nConnection closed", file=sys.stderr)
-        config['done'] = True
+        config["done"] = True
 
     elif ev == MG_EV_ERROR:
         # Error occurred
         error_msg = data if isinstance(data, str) else "Unknown error"
         print(f"\nError: {error_msg}", file=sys.stderr)
-        config['done'] = True
+        config["done"] = True
 
 
 def main():
@@ -166,8 +161,9 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="HTTP streaming client example")
-    parser.add_argument("url", nargs='?', default=DEFAULT_URL,
-                       help=f"URL to fetch (default: {DEFAULT_URL})")
+    parser.add_argument(
+        "url", nargs="?", default=DEFAULT_URL, help=f"URL to fetch (default: {DEFAULT_URL})"
+    )
 
     args = parser.parse_args()
 
@@ -177,10 +173,10 @@ def main():
 
     # Configuration
     config = {
-        'url': args.url,
-        'url_parts': url_parts,
-        'headers_parsed': False,
-        'done': False,
+        "url": args.url,
+        "url_parts": url_parts,
+        "headers_parsed": False,
+        "done": False,
     }
 
     # Register signal handlers
@@ -196,12 +192,11 @@ def main():
         print(f"Connecting to {connect_url}...", file=sys.stderr)
 
         conn = manager.connect(
-            connect_url,
-            handler=lambda c, e, d: streaming_handler(c, e, d, config)
+            connect_url, handler=lambda c, e, d: streaming_handler(c, e, d, config)
         )
 
         # Event loop
-        while not shutdown_requested and not config['done']:
+        while not shutdown_requested and not config["done"]:
             manager.poll(100)
 
         if shutdown_requested:

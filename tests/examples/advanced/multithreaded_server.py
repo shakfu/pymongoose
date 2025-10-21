@@ -88,7 +88,7 @@ def worker_thread(manager, conn_id, request_uri, sleep_time):
     time.sleep(sleep_time)
 
     # Prepare result (must be bytes)
-    result = f"Thread {thread_id} completed after {sleep_time}s".encode('utf-8')
+    result = f"Thread {thread_id} completed after {sleep_time}s".encode("utf-8")
 
     print(f"  [THREAD {thread_id}] Work done, sending result back")
 
@@ -147,8 +147,8 @@ def http_handler(conn, ev, data, config):
             # IMPORTANT: Pass connection ID, not connection object!
             thread = threading.Thread(
                 target=worker_thread,
-                args=(config['manager'], conn.id, hm.uri, config['sleep_time']),
-                daemon=True
+                args=(config["manager"], conn.id, hm.uri, config["sleep_time"]),
+                daemon=True,
             )
             thread.start()
 
@@ -208,7 +208,7 @@ wait                                # All finish ~2s
     elif ev == MG_EV_WAKEUP:
         # Received result from worker thread
         # data is bytes, decode to string
-        result_message = data.decode('utf-8') if isinstance(data, bytes) else data
+        result_message = data.decode("utf-8") if isinstance(data, bytes) else data
 
         print(f"[CONN {conn.id}] Received wakeup: {result_message}")
 
@@ -233,17 +233,23 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Multi-threaded HTTP server")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
-    parser.add_argument("-t", "--sleep-time", type=float, default=DEFAULT_SLEEP,
-                       help=f"Worker thread sleep time in seconds (default: {DEFAULT_SLEEP})")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument(
+        "-t",
+        "--sleep-time",
+        type=float,
+        default=DEFAULT_SLEEP,
+        help=f"Worker thread sleep time in seconds (default: {DEFAULT_SLEEP})",
+    )
 
     args = parser.parse_args()
 
     config = {
-        'listen': args.listen,
-        'sleep_time': args.sleep_time,
-        'manager': None,  # Will be set after manager creation
+        "listen": args.listen,
+        "sleep_time": args.sleep_time,
+        "manager": None,  # Will be set after manager creation
     }
 
     # Register signal handlers
@@ -253,7 +259,7 @@ def main():
     # Create manager with wakeup support enabled
     # IMPORTANT: enable_wakeup=True is required for Manager.wakeup() to work
     manager = Manager(lambda c, e, d: http_handler(c, e, d, config), enable_wakeup=True)
-    config['manager'] = manager
+    config["manager"] = manager
 
     try:
         # Start HTTP server

@@ -1,4 +1,5 @@
 """Tests for low-level operations."""
+
 import pytest
 import urllib.request
 from pymongoose import Manager, MG_EV_HTTP_MSG
@@ -12,7 +13,7 @@ def test_is_tls_property_exists():
         listener = manager.listen("http://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(listener, 'is_tls')
+        assert hasattr(listener, "is_tls")
         # Should be boolean
         assert isinstance(listener.is_tls, bool)
     finally:
@@ -104,5 +105,3 @@ def test_combined_tls_and_buffer_ops():
         assert True
     finally:
         manager.close()
-
-

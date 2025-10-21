@@ -1,4 +1,5 @@
 """Tests for JSON parsing utilities."""
+
 import pytest
 from pymongoose import json_get, json_get_num, json_get_bool, json_get_long, json_get_str
 
@@ -88,7 +89,7 @@ def test_json_get_bytes_input():
 
 def test_json_get_complex():
     """Test complex JSON document."""
-    json_data = '''
+    json_data = """
     {
         "users": [
             {"name": "Alice", "age": 30, "active": true},
@@ -99,7 +100,7 @@ def test_json_get_complex():
             "version": "1.0"
         }
     }
-    '''
+    """
 
     assert json_get_str(json_data, "$.users[0].name") == "Alice"
     assert json_get_num(json_data, "$.users[0].age") == 30.0

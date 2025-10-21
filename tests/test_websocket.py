@@ -1,10 +1,12 @@
 """Tests for WebSocket functionality."""
+
 import pytest
 import threading
 import time
 
 try:
     import websocket
+
     HAS_WEBSOCKET = True
 except ImportError:
     HAS_WEBSOCKET = False
@@ -20,8 +22,7 @@ from pymongoose import (
 from .conftest import get_free_port
 
 pytestmark = pytest.mark.skipif(
-    not HAS_WEBSOCKET,
-    reason="websocket-client not installed (pip install websocket-client)"
+    not HAS_WEBSOCKET, reason="websocket-client not installed (pip install websocket-client)"
 )
 
 
@@ -137,9 +138,9 @@ class TestWebSocketBasic:
 
             # Send multiple messages
             for i in range(3):
-                ws.send(f"Message {i+1}")
+                ws.send(f"Message {i + 1}")
                 response = ws.recv()
-                assert f"Echo {i+1}: Message {i+1}" == response
+                assert f"Echo {i + 1}: Message {i + 1}" == response
                 time.sleep(0.1)
 
             assert received_count[0] == 3
@@ -241,9 +242,9 @@ class TestWebSocketMessage:
             if event == MG_EV_HTTP_MSG:
                 conn.ws_upgrade(data)
             elif event == MG_EV_WS_MSG:
-                received_data['text'] = data.text
-                received_data['data'] = data.data
-                received_data['flags'] = data.flags
+                received_data["text"] = data.text
+                received_data["data"] = data.data
+                received_data["flags"] = data.flags
                 conn.ws_send("ok")
 
         manager = Manager(handler)
@@ -267,9 +268,9 @@ class TestWebSocketMessage:
             ws.recv()
             time.sleep(0.2)
 
-            assert received_data['text'] == test_message
-            assert isinstance(received_data['data'], bytes)
-            assert isinstance(received_data['flags'], int)
+            assert received_data["text"] == test_message
+            assert isinstance(received_data["data"], bytes)
+            assert isinstance(received_data["flags"], int)
 
             ws.close()
         finally:
@@ -283,7 +284,7 @@ class TestWebSocketMessage:
             if event == MG_EV_HTTP_MSG:
                 conn.ws_upgrade(data)
             elif event == MG_EV_WS_MSG:
-                received_data['data'] = data.data
+                received_data["data"] = data.data
                 conn.ws_send(data.data, WEBSOCKET_OP_BINARY)
 
         manager = Manager(handler)
@@ -307,7 +308,7 @@ class TestWebSocketMessage:
             response = ws.recv()
             time.sleep(0.2)
 
-            assert received_data['data'] == test_data
+            assert received_data["data"] == test_data
             assert response == test_data
 
             ws.close()

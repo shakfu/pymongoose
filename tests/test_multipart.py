@@ -1,4 +1,5 @@
 """Tests for multipart form parsing."""
+
 import pytest
 from pymongoose import http_parse_multipart
 
@@ -7,18 +8,18 @@ def test_multipart_single_field():
     """Test parsing a single form field."""
     # Simulate multipart body
     body = (
-        b'------WebKitFormBoundary\r\n'
+        b"------WebKitFormBoundary\r\n"
         b'Content-Disposition: form-data; name="field1"\r\n'
-        b'\r\n'
-        b'value1\r\n'
-        b'------WebKitFormBoundary--\r\n'
+        b"\r\n"
+        b"value1\r\n"
+        b"------WebKitFormBoundary--\r\n"
     )
 
     offset, part = http_parse_multipart(body, 0)
 
     if part is not None:  # Mongoose may or may not parse this format
-        assert part['name'] == 'field1'
-        assert part['body'] == b'value1'
+        assert part["name"] == "field1"
+        assert part["body"] == b"value1"
 
 
 def test_multipart_no_parts():

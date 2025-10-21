@@ -51,6 +51,7 @@ from pymongoose import (
 
 shutdown_requested = False
 
+
 def signal_handler(sig, frame):
     global shutdown_requested
     shutdown_requested = True
@@ -67,10 +68,8 @@ def handle_rest_api(conn, data):
 
     if uri == "/api/stats":
         import json
-        stats = {
-            "websocket_clients": len(ws_clients),
-            "endpoint": "/ws"
-        }
+
+        stats = {"websocket_clients": len(ws_clients), "endpoint": "/ws"}
         response = json.dumps(stats)
         conn.reply(200, response, headers={"Content-Type": "application/json"})
 
@@ -110,11 +109,7 @@ def handler(conn, event, data):
 
         else:
             # Serve static files
-            conn.serve_dir(
-                data,
-                root_dir=args.root,
-                extra_headers="Cache-Control: max-age=3600"
-            )
+            conn.serve_dir(data, root_dir=args.root, extra_headers="Cache-Control: max-age=3600")
 
     elif event == MG_EV_WS_OPEN:
         # WebSocket connection established
@@ -124,7 +119,11 @@ def handler(conn, event, data):
     elif event == MG_EV_WS_MSG:
         # WebSocket message received - echo it back
         msg = data
-        print(f"WebSocket message: {msg.text[:50]}..." if len(msg.text) > 50 else f"WebSocket message: {msg.text}")
+        print(
+            f"WebSocket message: {msg.text[:50]}..."
+            if len(msg.text) > 50
+            else f"WebSocket message: {msg.text}"
+        )
 
         # Echo back the message
         if msg.flags == WEBSOCKET_OP_TEXT:
@@ -139,9 +138,9 @@ def handler(conn, event, data):
 def main():
     global args, shutdown_requested
 
-    parser = argparse.ArgumentParser(description='WebSocket Server Example')
-    parser.add_argument('--port', type=int, default=8000, help='Port to listen on')
-    parser.add_argument('--root', default='./ws_root', help='Web root directory')
+    parser = argparse.ArgumentParser(description="WebSocket Server Example")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+    parser.add_argument("--root", default="./ws_root", help="Web root directory")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)

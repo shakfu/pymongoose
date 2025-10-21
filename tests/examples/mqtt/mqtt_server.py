@@ -61,12 +61,12 @@ def topic_match(msg_topic, sub_topic):
     """
     # Simple wildcard matching
     # Convert '+' to single-level wildcard, '#' to multi-level wildcard
-    msg_parts = msg_topic.split('/')
-    sub_parts = sub_topic.split('/')
+    msg_parts = msg_topic.split("/")
+    sub_parts = sub_topic.split("/")
 
     # '#' must be last and matches everything after
-    if '#' in sub_parts:
-        idx = sub_parts.index('#')
+    if "#" in sub_parts:
+        idx = sub_parts.index("#")
         if idx != len(sub_parts) - 1:
             return False  # '#' must be last
         sub_parts = sub_parts[:idx]
@@ -76,7 +76,7 @@ def topic_match(msg_topic, sub_topic):
         return False
 
     for mp, sp in zip(msg_parts, sub_parts):
-        if sp != '+' and sp != mp:
+        if sp != "+" and sp != mp:
             return False
 
     return True
@@ -133,7 +133,7 @@ def mqtt_ev_handler(conn, ev, data):
             # Client published message - route to subscribers
             try:
                 pub_topic = mm.topic
-                pub_data = mm.data.decode('utf-8', errors='ignore')
+                pub_data = mm.data.decode("utf-8", errors="ignore")
                 print(f"[{conn.id}] PUBLISH [{pub_topic}] -> [{pub_data}]")
 
                 # Route to matching subscriptions
@@ -177,8 +177,9 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="MQTT broker/server example")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
 
     args = parser.parse_args()
 

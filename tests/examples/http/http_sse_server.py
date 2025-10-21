@@ -138,7 +138,7 @@ def http_handler(conn, ev, data, config):
             for key, value in headers.items():
                 header_str += f"{key}: {value}\r\n"
             header_str += "\r\n"
-            conn.send(header_str.encode('utf-8'))
+            conn.send(header_str.encode("utf-8"))
 
             # Send initial event
             send_sse_event(conn, "connected", "Welcome to SSE server!")
@@ -159,10 +159,11 @@ def http_handler(conn, ev, data, config):
             }
 
             import json
+
             conn.reply(
                 200,
                 json.dumps(stats, indent=2) + "\n",
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json"},
             )
 
         elif hm.uri == "/":
@@ -250,18 +251,24 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Server-Sent Events server")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
-    parser.add_argument("-i", "--interval", type=int, default=5,
-                       help="Event broadcast interval in seconds (default: 5)")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        default=5,
+        help="Event broadcast interval in seconds (default: 5)",
+    )
 
     args = parser.parse_args()
 
     # Configuration
     config = {
-        'listen': args.listen,
-        'interval': args.interval,
-        'manager': None,
+        "listen": args.listen,
+        "interval": args.interval,
+        "manager": None,
     }
 
     # Register signal handlers
@@ -270,7 +277,7 @@ def main():
 
     # Create manager
     manager = Manager(lambda c, e, d: http_handler(c, e, d, config))
-    config['manager'] = manager
+    config["manager"] = manager
 
     try:
         # Start listening
@@ -281,7 +288,7 @@ def main():
             args.interval * 1000,  # Convert to milliseconds
             repeat=True,
             run_now=False,
-            callback=lambda: timer_callback(manager, config)
+            callback=lambda: timer_callback(manager, config),
         )
 
         print(f"SSE Server started on {args.listen}")

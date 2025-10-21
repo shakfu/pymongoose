@@ -64,7 +64,7 @@ class UploadState:
             os.remove(self.filepath)
 
         # Open for binary writing
-        self.file_handle = open(self.filepath, 'wb')
+        self.file_handle = open(self.filepath, "wb")
 
     def write_chunk(self, data):
         """Write data chunk to file."""
@@ -106,18 +106,18 @@ def handle_upload(conn, ev, data, config):
         # Received HTTP headers, check if it's an upload request
         hm = data  # HttpMessage object
 
-        if hm.uri.startswith('/upload/'):
+        if hm.uri.startswith("/upload/"):
             # Extract filename from URI
             filename = hm.uri[8:]  # Remove '/upload/' prefix
             if not filename:
-                filename = 'uploaded_file'
+                filename = "uploaded_file"
 
             # Build upload path
-            filepath = os.path.join(config['upload_dir'], filename)
+            filepath = os.path.join(config["upload_dir"], filename)
 
             # Validate path (basic security check)
             filepath = os.path.abspath(filepath)
-            upload_dir = os.path.abspath(config['upload_dir'])
+            upload_dir = os.path.abspath(config["upload_dir"])
             if not filepath.startswith(upload_dir):
                 print(f"[{conn.id}] SECURITY: Rejected path traversal attempt: {filename}")
                 conn.reply(400, "Bad Request: Invalid filename")
@@ -157,7 +157,9 @@ def handle_upload(conn, ev, data, config):
             # Check if complete
             if upload_state.is_complete():
                 upload_state.close()
-                print(f"[{conn.id}] UPLOAD COMPLETE: {upload_state.filepath} ({upload_state.received_bytes} bytes)")
+                print(
+                    f"[{conn.id}] UPLOAD COMPLETE: {upload_state.filepath} ({upload_state.received_bytes} bytes)"
+                )
 
                 # Send response
                 conn.reply(200, f"{upload_state.received_bytes} bytes uploaded successfully\n")
@@ -188,7 +190,7 @@ def http_handler(conn, ev, data, config):
             return
 
         # Non-upload requests - serve info page
-        if hm.uri == '/':
+        if hm.uri == "/":
             html = """<!DOCTYPE html>
 <html>
 <head><title>File Upload Server</title></head>
@@ -211,10 +213,15 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="HTTP file upload server")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
-    parser.add_argument("-d", "--upload-dir", default=DEFAULT_UPLOAD_DIR,
-                       help=f"Upload directory (default: {DEFAULT_UPLOAD_DIR})")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument(
+        "-d",
+        "--upload-dir",
+        default=DEFAULT_UPLOAD_DIR,
+        help=f"Upload directory (default: {DEFAULT_UPLOAD_DIR})",
+    )
 
     args = parser.parse_args()
 
@@ -223,8 +230,8 @@ def main():
 
     # Configuration
     config = {
-        'listen': args.listen,
-        'upload_dir': args.upload_dir,
+        "listen": args.listen,
+        "upload_dir": args.upload_dir,
     }
 
     # Register signal handlers

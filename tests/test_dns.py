@@ -1,4 +1,5 @@
 """Tests for DNS resolution."""
+
 import pytest
 import time
 from pymongoose import Manager, MG_EV_RESOLVE, MG_EV_ERROR

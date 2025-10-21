@@ -1,4 +1,5 @@
 """Tests for URL encoding."""
+
 import pytest
 from pymongoose import url_encode
 

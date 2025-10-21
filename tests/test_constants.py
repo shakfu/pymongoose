@@ -1,4 +1,5 @@
 """Tests for exported constants."""
+
 import pytest
 from pymongoose import (
     MG_EV_ERROR,

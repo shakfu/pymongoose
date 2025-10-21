@@ -104,35 +104,31 @@ def proxy_handler(conn, ev, data, config):
     """
     global tunnel_established, response_received
 
-    target_url = config['target_url']
+    target_url = config["target_url"]
     scheme, host, port, uri = parse_url(target_url)
 
     if ev == MG_EV_CONNECT:
         print(f"[{conn.id}] Connected to proxy")
 
         # Initialize TLS if proxy uses HTTPS
-        proxy_scheme = parse_url(config['proxy_url'])[0]
+        proxy_scheme = parse_url(config["proxy_url"])[0]
         if proxy_scheme == "https" and conn.is_tls:
-            proxy_host = parse_url(config['proxy_url'])[1]
-            tls_opts = TlsOpts(name=proxy_host.encode('utf-8'), skip_verification=True)
+            proxy_host = parse_url(config["proxy_url"])[1]
+            tls_opts = TlsOpts(name=proxy_host.encode("utf-8"), skip_verification=True)
             conn.tls_init(tls_opts)
 
         # Send CONNECT request to establish tunnel
-        connect_request = (
-            f"CONNECT {host}:{port} HTTP/1.1\r\n"
-            f"Host: {host}:{port}\r\n"
-            f"\r\n"
-        )
+        connect_request = f"CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n\r\n"
         print(f"[{conn.id}] Sending CONNECT request:")
         print(f"  CONNECT {host}:{port} HTTP/1.1")
-        conn.send(connect_request.encode('utf-8'))
+        conn.send(connect_request.encode("utf-8"))
 
     elif not tunnel_established and ev == MG_EV_READ:
         # Parse CONNECT response from proxy
         recv_data = conn.recv_data()
         if recv_data and b"\r\n\r\n" in recv_data:
             # Parse HTTP response
-            response_line = recv_data.split(b"\r\n")[0].decode('utf-8', errors='ignore')
+            response_line = recv_data.split(b"\r\n")[0].decode("utf-8", errors="ignore")
             print(f"[{conn.id}] Proxy response: {response_line}")
 
             if b"200" in recv_data or b"Connection established" in recv_data:
@@ -142,19 +138,15 @@ def proxy_handler(conn, ev, data, config):
                 # Initialize TLS if target uses HTTPS
                 if scheme == "https":
                     print(f"[{conn.id}] Initializing TLS for target")
-                    tls_opts = TlsOpts(name=host.encode('utf-8'), skip_verification=True)
+                    tls_opts = TlsOpts(name=host.encode("utf-8"), skip_verification=True)
                     conn.tls_init(tls_opts)
 
                 # Send actual HTTP request to target through tunnel
-                http_request = (
-                    f"GET {uri} HTTP/1.0\r\n"
-                    f"Host: {host}\r\n"
-                    f"\r\n"
-                )
+                http_request = f"GET {uri} HTTP/1.0\r\nHost: {host}\r\n\r\n"
                 print(f"[{conn.id}] Sending HTTP request to target:")
                 print(f"  GET {uri} HTTP/1.0")
                 print(f"  Host: {host}")
-                conn.send(http_request.encode('utf-8'))
+                conn.send(http_request.encode("utf-8"))
             else:
                 print(f"[{conn.id}] Proxy connection failed: {response_line}")
                 conn.close()
@@ -170,7 +162,7 @@ def proxy_handler(conn, ev, data, config):
         print("Response body:")
         print("-" * 60)
         # Print first 500 bytes of response
-        body_preview = hm.body_bytes[:500].decode('utf-8', errors='ignore')
+        body_preview = hm.body_bytes[:500].decode("utf-8", errors="ignore")
         print(body_preview)
         if len(hm.body_bytes) > 500:
             print(f"... ({len(hm.body_bytes) - 500} more bytes)")
@@ -209,8 +201,8 @@ def main():
     print()
 
     config = {
-        'proxy_url': proxy_url,
-        'target_url': target_url,
+        "proxy_url": proxy_url,
+        "target_url": target_url,
     }
 
     # Register signal handlers
@@ -223,9 +215,7 @@ def main():
     try:
         # Connect to proxy server
         conn = manager.connect(
-            proxy_url,
-            handler=lambda c, e, d: proxy_handler(c, e, d, config),
-            http=True
+            proxy_url, handler=lambda c, e, d: proxy_handler(c, e, d, config), http=True
         )
 
         # Event loop - exit when response received or timeout

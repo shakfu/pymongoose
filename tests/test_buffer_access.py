@@ -1,4 +1,5 @@
 """Tests for connection buffer access."""
+
 import pytest
 import urllib.request
 import time
@@ -14,12 +15,12 @@ def test_buffer_properties_exist():
         manager.poll(10)
 
         # Properties should exist
-        assert hasattr(listener, 'recv_len')
-        assert hasattr(listener, 'send_len')
-        assert hasattr(listener, 'recv_size')
-        assert hasattr(listener, 'send_size')
-        assert hasattr(listener, 'recv_data')
-        assert hasattr(listener, 'send_data')
+        assert hasattr(listener, "recv_len")
+        assert hasattr(listener, "send_len")
+        assert hasattr(listener, "recv_size")
+        assert hasattr(listener, "send_size")
+        assert hasattr(listener, "recv_data")
+        assert hasattr(listener, "send_data")
     finally:
         manager.close()
 
@@ -50,11 +51,13 @@ def test_recv_buffer_on_http_request():
     def handler(conn, ev, data):
         if ev == MG_EV_HTTP_MSG:
             # Capture recv buffer info
-            recv_data_captured.append({
-                'recv_len': conn.recv_len,
-                'recv_size': conn.recv_size,
-                'recv_data': conn.recv_data()
-            })
+            recv_data_captured.append(
+                {
+                    "recv_len": conn.recv_len,
+                    "recv_size": conn.recv_size,
+                    "recv_data": conn.recv_data(),
+                }
+            )
             conn.reply(200, b"OK")
 
     try:
@@ -78,10 +81,10 @@ def test_recv_buffer_on_http_request():
 
         # Should have captured recv buffer data
         if recv_data_captured:
-            assert recv_data_captured[0]['recv_len'] >= 0
-            assert recv_data_captured[0]['recv_size'] >= 0
+            assert recv_data_captured[0]["recv_len"] >= 0
+            assert recv_data_captured[0]["recv_size"] >= 0
             # recv_data should be bytes
-            assert isinstance(recv_data_captured[0]['recv_data'], bytes)
+            assert isinstance(recv_data_captured[0]["recv_data"], bytes)
     finally:
         manager.close()
 
@@ -96,10 +99,12 @@ def test_send_buffer_on_reply():
             conn.reply(200, b"Hello World" * 100)  # Large response
 
             # Capture send buffer info after reply
-            send_data_captured.append({
-                'send_len': conn.send_len,
-                'send_size': conn.send_size,
-            })
+            send_data_captured.append(
+                {
+                    "send_len": conn.send_len,
+                    "send_size": conn.send_size,
+                }
+            )
 
     try:
         listener = manager.listen("http://127.0.0.1:0", handler=handler)
@@ -123,8 +128,8 @@ def test_send_buffer_on_reply():
         # Send buffer should have been used
         if send_data_captured:
             # send_len might be 0 if already flushed, but should be >= 0
-            assert send_data_captured[0]['send_len'] >= 0
-            assert send_data_captured[0]['send_size'] >= 0
+            assert send_data_captured[0]["send_len"] >= 0
+            assert send_data_captured[0]["send_size"] >= 0
     finally:
         manager.close()
 

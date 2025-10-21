@@ -1,4 +1,5 @@
 """Tests for HTTP Basic Authentication."""
+
 import pytest
 import base64
 from pymongoose import Manager, MG_EV_HTTP_MSG

@@ -1,4 +1,5 @@
 """Tests for wakeup functionality."""
+
 import pytest
 import threading
 import time

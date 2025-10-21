@@ -1,4 +1,5 @@
 """Tests for HTTP Server-Sent Events (SSE)."""
+
 import pytest
 import urllib.request
 import time
@@ -15,7 +16,7 @@ def test_http_sse_method_exists():
         manager.poll(10)
 
         # Method should exist
-        assert hasattr(listener, 'http_sse')
+        assert hasattr(listener, "http_sse")
         assert callable(listener.http_sse)
     finally:
         manager.close()
@@ -23,6 +24,7 @@ def test_http_sse_method_exists():
 
 def test_http_sse_basic():
     """Test basic SSE message sending."""
+
     def handler(conn, ev, data):
         if ev == MG_EV_HTTP_MSG:
             # Send SSE headers
@@ -39,7 +41,7 @@ def test_http_sse_basic():
     with ServerThread(handler) as port:
         try:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
 
             # Should contain SSE formatted data
             assert "event: message" in body or "message" in body
@@ -187,7 +189,7 @@ def test_http_sse_long_data():
 
         try:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=1)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
 
             # Large data should be present
             assert large_data in body or len(body) >= 1000

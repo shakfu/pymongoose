@@ -1,4 +1,5 @@
 """Tests for connection draining (graceful close)."""
+
 import pytest
 import time
 import urllib.request
@@ -27,7 +28,7 @@ class TestDrain:
 
             # Make request
             response = urllib.request.urlopen(url, timeout=5)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
 
             assert response.status == 200
             assert body == "Response sent"
@@ -82,8 +83,8 @@ class TestDrain:
             # Make multiple requests
             for i in range(3):
                 response = urllib.request.urlopen(url, timeout=5)
-                body = response.read().decode('utf-8')
-                assert body == f"Request #{i+1}"
+                body = response.read().decode("utf-8")
+                assert body == f"Request #{i + 1}"
                 time.sleep(0.1)
 
             assert request_count[0] == 3

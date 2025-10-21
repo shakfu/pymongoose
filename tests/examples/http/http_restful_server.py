@@ -87,14 +87,10 @@ def handle_api_wildcard(conn, hm):
         hm: HttpMessage object
     """
     # Echo back the URI in JSON format
-    response = {
-        "result": hm.uri
-    }
+    response = {"result": hm.uri}
 
     conn.reply(
-        200,
-        json.dumps(response, indent=2) + "\n",
-        headers={"Content-Type": "application/json"}
+        200, json.dumps(response, indent=2) + "\n", headers={"Content-Type": "application/json"}
     )
 
 
@@ -112,7 +108,7 @@ def http_handler(conn, ev, data, config):
 
         # Route API endpoints
         if hm.uri == "/api/stats":
-            handle_api_stats(conn, config['manager'])
+            handle_api_stats(conn, config["manager"])
 
         elif hm.uri.startswith("/api/f2/"):
             handle_api_wildcard(conn, hm)
@@ -122,7 +118,7 @@ def http_handler(conn, ev, data, config):
             try:
                 # Parse JSON body
                 if hm.body:
-                    request_data = json.loads(hm.body.decode('utf-8'))
+                    request_data = json.loads(hm.body.decode("utf-8"))
                 else:
                     request_data = {}
 
@@ -130,20 +126,20 @@ def http_handler(conn, ev, data, config):
                 response = {
                     "status": "success",
                     "received": request_data,
-                    "timestamp": "2024-01-01T00:00:00Z"  # Simplified
+                    "timestamp": "2024-01-01T00:00:00Z",  # Simplified
                 }
 
                 conn.reply(
                     200,
                     json.dumps(response, indent=2) + "\n",
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
             except json.JSONDecodeError:
                 error_response = {"error": "Invalid JSON"}
                 conn.reply(
                     400,
                     json.dumps(error_response) + "\n",
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
         elif hm.uri == "/":
@@ -173,11 +169,7 @@ curl -X POST http://localhost:8000/api/data -H "Content-Type: application/json" 
         else:
             # 404 for unknown routes
             error = {"error": "Not Found", "path": hm.uri}
-            conn.reply(
-                404,
-                json.dumps(error) + "\n",
-                headers={"Content-Type": "application/json"}
-            )
+            conn.reply(404, json.dumps(error) + "\n", headers={"Content-Type": "application/json"})
 
 
 def main():
@@ -186,18 +178,23 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="HTTP RESTful server")
-    parser.add_argument("-l", "--listen", default=DEFAULT_LISTEN,
-                       help=f"Listen URL (default: {DEFAULT_LISTEN})")
-    parser.add_argument("-r", "--root-dir", default=DEFAULT_ROOT_DIR,
-                       help=f"Root directory for static files (default: {DEFAULT_ROOT_DIR})")
+    parser.add_argument(
+        "-l", "--listen", default=DEFAULT_LISTEN, help=f"Listen URL (default: {DEFAULT_LISTEN})"
+    )
+    parser.add_argument(
+        "-r",
+        "--root-dir",
+        default=DEFAULT_ROOT_DIR,
+        help=f"Root directory for static files (default: {DEFAULT_ROOT_DIR})",
+    )
 
     args = parser.parse_args()
 
     # Configuration
     config = {
-        'listen': args.listen,
-        'root_dir': args.root_dir,
-        'manager': None,  # Will be set after manager creation
+        "listen": args.listen,
+        "root_dir": args.root_dir,
+        "manager": None,  # Will be set after manager creation
     }
 
     # Register signal handlers
@@ -206,7 +203,7 @@ def main():
 
     # Create manager
     manager = Manager(lambda c, e, d: http_handler(c, e, d, config))
-    config['manager'] = manager
+    config["manager"] = manager
 
     try:
         # Start listening

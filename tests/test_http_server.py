@@ -1,4 +1,5 @@
 """Tests for HTTP server functionality."""
+
 import pytest
 import threading
 import time
@@ -14,6 +15,7 @@ class TestHTTPServer:
     @pytest.fixture
     def server_thread(self):
         """Start a test server in a background thread."""
+
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
                 conn.reply(200, "Test Response")
@@ -27,7 +29,7 @@ class TestHTTPServer:
         url = f"http://localhost:{port}/"
 
         response = urllib.request.urlopen(url, timeout=5)
-        body = response.read().decode('utf-8')
+        body = response.read().decode("utf-8")
 
         assert response.status == 200
         assert body == "Test Response"
@@ -40,7 +42,7 @@ class TestHTTPServer:
         for i in range(3):
             response = urllib.request.urlopen(url, timeout=5)
             assert response.status == 200
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
             assert body == "Test Response"
             time.sleep(0.1)  # Small delay between requests
 
@@ -66,10 +68,10 @@ class TestHTTPHeaders:
 
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
-                captured_data['method'] = data.method
-                captured_data['uri'] = data.uri
-                captured_data['query'] = data.query
-                captured_data['user_agent'] = data.header('User-Agent')
+                captured_data["method"] = data.method
+                captured_data["uri"] = data.uri
+                captured_data["query"] = data.query
+                captured_data["user_agent"] = data.header("User-Agent")
 
                 headers = {"Content-Type": "application/json"}
                 conn.reply(200, '{"status": "ok"}', headers)
@@ -84,8 +86,8 @@ class TestHTTPHeaders:
 
         urllib.request.urlopen(url, timeout=5)
 
-        assert data['method'] == 'GET'
-        assert data['uri'] == '/test'
+        assert data["method"] == "GET"
+        assert data["uri"] == "/test"
 
     def test_query_string(self, header_server):
         """Test query string parsing."""
@@ -95,7 +97,7 @@ class TestHTTPHeaders:
         urllib.request.urlopen(url, timeout=5)
         time.sleep(0.2)  # Give handler time to process
 
-        assert data['query'] == 'foo=bar&baz=qux'
+        assert data["query"] == "foo=bar&baz=qux"
 
     def test_custom_headers(self, header_server):
         """Test reading custom headers."""
@@ -103,12 +105,12 @@ class TestHTTPHeaders:
         url = f"http://localhost:{port}/"
 
         req = urllib.request.Request(url)
-        req.add_header('User-Agent', 'PyMongoose-Test/1.0')
+        req.add_header("User-Agent", "PyMongoose-Test/1.0")
 
         urllib.request.urlopen(req, timeout=5)
         time.sleep(0.2)  # Give handler time to process
 
-        assert 'PyMongoose-Test/1.0' in data['user_agent']
+        assert "PyMongoose-Test/1.0" in data["user_agent"]
 
 
 class TestHTTPMessage:
@@ -120,11 +122,11 @@ class TestHTTPMessage:
 
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
-                received_data['method'] = data.method
-                received_data['uri'] = data.uri
-                received_data['query'] = data.query
-                received_data['body_text'] = data.body_text
-                received_data['headers'] = data.headers()
+                received_data["method"] = data.method
+                received_data["uri"] = data.uri
+                received_data["query"] = data.query
+                received_data["body_text"] = data.body_text
+                received_data["headers"] = data.headers()
                 conn.reply(200, "OK")
 
         with ServerThread(handler) as port:
@@ -132,10 +134,10 @@ class TestHTTPMessage:
             urllib.request.urlopen(url, timeout=2)
             time.sleep(0.2)
 
-            assert received_data['method'] == 'GET'
-            assert received_data['uri'] == '/test'
-            assert received_data['query'] == 'key=value'
-            assert isinstance(received_data['headers'], list)
+            assert received_data["method"] == "GET"
+            assert received_data["uri"] == "/test"
+            assert received_data["query"] == "key=value"
+            assert isinstance(received_data["headers"], list)
 
 
 class TestConnectionLifecycle:
@@ -170,6 +172,7 @@ class TestManagerLifecycle:
 
     def test_manager_with_handler(self):
         """Test Manager accepts a default handler."""
+
         def handler(conn, event, data):
             pass
 
@@ -180,6 +183,7 @@ class TestManagerLifecycle:
     def test_listen_returns_connection(self):
         """Test listen() returns a Connection object."""
         from .conftest import get_free_port
+
         manager = Manager()
         port = get_free_port()
         conn = manager.listen(f"http://0.0.0.0:{port}", http=True)
@@ -192,6 +196,7 @@ class TestManagerLifecycle:
     def test_poll_runs_without_error(self):
         """Test poll() executes without error."""
         from .conftest import get_free_port
+
         manager = Manager()
         port = get_free_port()
         manager.listen(f"http://0.0.0.0:{port}", http=True)

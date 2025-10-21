@@ -63,14 +63,14 @@ def dns_handler(conn, ev, data, config):
         # data contains the resolved address as a string
         resolved_addr = data if isinstance(data, str) else str(data)
 
-        hostname = config.get('hostname', 'unknown')
+        hostname = config.get("hostname", "unknown")
         print(f"[{conn.id}] DNS resolution for '{hostname}' succeeded")
         print(f"[{conn.id}] Resolved to: {resolved_addr}")
 
     elif ev == MG_EV_ERROR:
         # Resolution failed
         error_msg = data if isinstance(data, str) else "Unknown error"
-        hostname = config.get('hostname', 'unknown')
+        hostname = config.get("hostname", "unknown")
         print(f"[{conn.id}] DNS resolution for '{hostname}' failed: {error_msg}")
 
 
@@ -90,13 +90,13 @@ def timer_callback(manager, config):
         # This is a workaround since DNS resolution requires a connection object
         dns_conn = manager.listen(
             "tcp://127.0.0.1:0",  # Bind to any free port
-            handler=lambda c, e, d: dns_handler(c, e, d, config)
+            handler=lambda c, e, d: dns_handler(c, e, d, config),
         )
         print(f"[{dns_conn.id}] DNS resolver connection created")
 
     # Trigger DNS resolution
     try:
-        hostname = config['hostname']
+        hostname = config["hostname"]
         print(f"\n[{dns_conn.id}] Resolving '{hostname}'...")
         dns_conn.resolve(hostname)
     except RuntimeError as e:
@@ -109,20 +109,28 @@ def main():
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="DNS resolution client example")
-    parser.add_argument("-H", "--hostname", default=DEFAULT_HOSTNAME,
-                       help=f"Hostname to resolve (default: {DEFAULT_HOSTNAME})")
-    parser.add_argument("-i", "--interval", type=int, default=DEFAULT_INTERVAL,
-                       help=f"Resolution interval in seconds (default: {DEFAULT_INTERVAL})")
-    parser.add_argument("--once", action='store_true',
-                       help="Resolve once and exit (don't repeat)")
+    parser.add_argument(
+        "-H",
+        "--hostname",
+        default=DEFAULT_HOSTNAME,
+        help=f"Hostname to resolve (default: {DEFAULT_HOSTNAME})",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        default=DEFAULT_INTERVAL,
+        help=f"Resolution interval in seconds (default: {DEFAULT_INTERVAL})",
+    )
+    parser.add_argument("--once", action="store_true", help="Resolve once and exit (don't repeat)")
 
     args = parser.parse_args()
 
     # Configuration
     config = {
-        'hostname': args.hostname,
-        'interval': args.interval,
-        'once': args.once,
+        "hostname": args.hostname,
+        "interval": args.interval,
+        "once": args.once,
     }
 
     # Register signal handlers
@@ -138,7 +146,7 @@ def main():
             args.interval * 1000,  # Convert to milliseconds
             repeat=not args.once,
             run_now=True,  # Resolve immediately on start
-            callback=lambda: timer_callback(manager, config)
+            callback=lambda: timer_callback(manager, config),
         )
 
         print(f"DNS Resolution Client started")

@@ -60,7 +60,7 @@ class HttpClient:
                 # Initialize TLS for HTTPS
                 tls_opts = TlsOpts(
                     ca=self.ca_cert if self.ca_cert else b"",
-                    skip_verification=not self.ca_cert  # Skip if no CA provided
+                    skip_verification=not self.ca_cert,  # Skip if no CA provided
                 )
                 conn.tls_init(tls_opts)
 
@@ -73,13 +73,13 @@ class HttpClient:
             if self.method == "GET":
                 request = f"{self.method} {self.url.split('/', 3)[3] if '/' in self.url.split('://', 1)[1] else '/'} HTTP/1.1\r\nHost: {self.url.split('/')[2]}{headers_str}\r\n\r\n"
             else:
-                body = self.data.encode('utf-8') if isinstance(self.data, str) else self.data
+                body = self.data.encode("utf-8") if isinstance(self.data, str) else self.data
                 request = f"{self.method} {self.url.split('/', 3)[3] if '/' in self.url.split('://', 1)[1] else '/'} HTTP/1.1\r\nHost: {self.url.split('/')[2]}\r\nContent-Length: {len(body)}{headers_str}\r\n\r\n"
-                conn.send(request.encode('utf-8'))
+                conn.send(request.encode("utf-8"))
                 conn.send(body)
                 return
 
-            conn.send(request.encode('utf-8'))
+            conn.send(request.encode("utf-8"))
 
         elif event == MG_EV_HTTP_MSG:
             # Response received
@@ -117,38 +117,35 @@ class HttpClient:
 
         self.manager.close()
 
-        return {
-            "status": self.response_code,
-            "body": self.response_body,
-            "error": self.error
-        }
+        return {"status": self.response_code, "body": self.response_body, "error": self.error}
 
 
 def main():
-    parser = argparse.ArgumentParser(description='HTTP Client Example')
-    parser.add_argument('url', help='URL to request')
-    parser.add_argument('--method', default='GET', choices=['GET', 'POST', 'PUT', 'DELETE'],
-                        help='HTTP method')
-    parser.add_argument('--data', help='Request body data')
-    parser.add_argument('--header', action='append', help='Custom header (format: "Name: Value")')
-    parser.add_argument('--timeout', type=int, default=10, help='Request timeout in seconds')
-    parser.add_argument('--ca-cert', help='Path to CA certificate file for TLS verification')
-    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    parser = argparse.ArgumentParser(description="HTTP Client Example")
+    parser.add_argument("url", help="URL to request")
+    parser.add_argument(
+        "--method", default="GET", choices=["GET", "POST", "PUT", "DELETE"], help="HTTP method"
+    )
+    parser.add_argument("--data", help="Request body data")
+    parser.add_argument("--header", action="append", help='Custom header (format: "Name: Value")')
+    parser.add_argument("--timeout", type=int, default=10, help="Request timeout in seconds")
+    parser.add_argument("--ca-cert", help="Path to CA certificate file for TLS verification")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     args = parser.parse_args()
 
     # Parse headers
     headers = {}
     if args.header:
         for header in args.header:
-            if ':' in header:
-                name, value = header.split(':', 1)
+            if ":" in header:
+                name, value = header.split(":", 1)
                 headers[name.strip()] = value.strip()
 
     # Load CA certificate if provided
     ca_cert = None
     if args.ca_cert:
         try:
-            with open(args.ca_cert, 'rb') as f:
+            with open(args.ca_cert, "rb") as f:
                 ca_cert = f.read()
         except IOError as e:
             print(f"Error reading CA certificate: {e}", file=sys.stderr)
@@ -168,23 +165,23 @@ def main():
         data=args.data,
         headers=headers,
         timeout=args.timeout,
-        ca_cert=ca_cert
+        ca_cert=ca_cert,
     )
 
     result = client.execute()
 
     # Display results
-    if result['error']:
+    if result["error"]:
         print(f"Error: {result['error']}", file=sys.stderr)
         return 1
 
-    if result['status']:
+    if result["status"]:
         print(f"HTTP {result['status']}")
         if args.verbose:
             print(f"Response length: {len(result['body'])} bytes")
         print()
-        print(result['body'])
-        return 0 if 200 <= result['status'] < 300 else 1
+        print(result["body"])
+        return 0 if 200 <= result["status"] < 300 else 1
     else:
         print("No response received", file=sys.stderr)
         return 1

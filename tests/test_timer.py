@@ -1,4 +1,5 @@
 """Tests for Timer API."""
+
 import pytest
 import time
 import threading
@@ -109,6 +110,7 @@ def test_multiple_timers():
     def make_callback(name):
         def callback():
             call_counts[name] += 1
+
         return callback
 
     try:
@@ -239,7 +241,7 @@ def test_timer_method_exists():
 
     try:
         # Manager should have timer_add
-        assert hasattr(manager, 'timer_add')
+        assert hasattr(manager, "timer_add")
         assert callable(manager.timer_add)
 
         # Should create timer without error

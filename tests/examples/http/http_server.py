@@ -37,6 +37,7 @@ from pymongoose import (
 
 shutdown_requested = False
 
+
 def signal_handler(sig, frame):
     global shutdown_requested
     shutdown_requested = True
@@ -57,15 +58,15 @@ def handle_upload(conn, message):
         if part is None:
             break
 
-        if part['filename']:
+        if part["filename"]:
             # This is a file upload
-            filename = part['filename']
+            filename = part["filename"]
             upload_dir = Path("./uploads")
             upload_dir.mkdir(exist_ok=True)
 
             filepath = upload_dir / filename
-            with open(filepath, 'wb') as f:
-                f.write(part['body'])
+            with open(filepath, "wb") as f:
+                f.write(part["body"])
 
             files_uploaded.append(filename)
             print(f"Uploaded: {filename} ({len(part['body'])} bytes)")
@@ -80,11 +81,8 @@ def handle_upload(conn, message):
 def handle_api_info(conn):
     """Handle /api/info endpoint - return JSON."""
     import json
-    info = {
-        "server": "pymongoose",
-        "version": "0.1.1",
-        "protocol": "HTTP/1.1"
-    }
+
+    info = {"server": "pymongoose", "version": "0.1.1", "protocol": "HTTP/1.1"}
     json_str = json.dumps(info)
     conn.reply(200, json_str, headers={"Content-Type": "application/json"})
 
@@ -97,7 +95,7 @@ def handler(conn, event, data):
             tls_opts = TlsOpts(
                 cert=CERT_DATA,
                 key=KEY_DATA,
-                skip_verification=True  # Self-signed cert
+                skip_verification=True,  # Self-signed cert
             )
             conn.tls_init(tls_opts)
 
@@ -120,11 +118,7 @@ def handler(conn, event, data):
 
         else:
             # Serve static files from web root
-            conn.serve_dir(
-                data,
-                root_dir=args.root,
-                extra_headers="Access-Control-Allow-Origin: *"
-            )
+            conn.serve_dir(data, root_dir=args.root, extra_headers="Access-Control-Allow-Origin: *")
 
 
 # Self-signed certificate for HTTPS demo
@@ -149,10 +143,10 @@ DQ6La8aVGgWfxslioYdFlPn90AuUHESOwQ==
 def main():
     global args, shutdown_requested
 
-    parser = argparse.ArgumentParser(description='HTTP Server Example')
-    parser.add_argument('--port', type=int, default=8000, help='Port to listen on')
-    parser.add_argument('--root', default='./web_root', help='Web root directory')
-    parser.add_argument('--tls', action='store_true', help='Enable HTTPS with self-signed cert')
+    parser = argparse.ArgumentParser(description="HTTP Server Example")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+    parser.add_argument("--root", default="./web_root", help="Web root directory")
+    parser.add_argument("--tls", action="store_true", help="Enable HTTPS with self-signed cert")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)

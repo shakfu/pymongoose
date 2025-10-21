@@ -38,6 +38,7 @@ from pymongoose import (
 
 shutdown_requested = False
 
+
 def signal_handler(sig, frame):
     global shutdown_requested
     shutdown_requested = True
@@ -57,7 +58,9 @@ class BroadcastServer:
         """Timer callback - broadcast message to all connected clients."""
         self.broadcast_count += 1
         timestamp = time.strftime("%H:%M:%S")
-        message = f"[{timestamp}] Broadcast #{self.broadcast_count} to {len(self.ws_clients)} clients"
+        message = (
+            f"[{timestamp}] Broadcast #{self.broadcast_count} to {len(self.ws_clients)} clients"
+        )
 
         print(message)
 
@@ -124,7 +127,7 @@ class BroadcastServer:
             interval_ms,
             self.broadcast_timer,
             repeat=True,
-            run_now=False  # Don't broadcast immediately
+            run_now=False,  # Don't broadcast immediately
         )
 
         print(f"WebSocket broadcast server started on http://localhost:{self.port}")
@@ -324,9 +327,9 @@ HTML_PAGE = """<!DOCTYPE html>
 
 
 def main():
-    parser = argparse.ArgumentParser(description='WebSocket Broadcast Example')
-    parser.add_argument('--port', type=int, default=8000, help='Port to listen on')
-    parser.add_argument('--interval', type=float, default=1.0, help='Broadcast interval in seconds')
+    parser = argparse.ArgumentParser(description="WebSocket Broadcast Example")
+    parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
+    parser.add_argument("--interval", type=float, default=1.0, help="Broadcast interval in seconds")
     args = parser.parse_args()
 
     server = BroadcastServer(port=args.port, interval=args.interval)

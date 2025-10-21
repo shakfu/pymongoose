@@ -1,4 +1,5 @@
 """Tests for connection flow control flags."""
+
 import pytest
 from pymongoose import Manager, MG_EV_HTTP_MSG
 
@@ -69,12 +70,14 @@ def test_flow_control_with_http():
     def handler(conn, ev, data):
         if ev == MG_EV_HTTP_MSG:
             # Capture connection state during HTTP message
-            conn_states.append({
-                'is_full': conn.is_full,
-                'is_draining': conn.is_draining,
-                'is_readable': conn.is_readable,
-                'is_writable': conn.is_writable,
-            })
+            conn_states.append(
+                {
+                    "is_full": conn.is_full,
+                    "is_draining": conn.is_draining,
+                    "is_readable": conn.is_readable,
+                    "is_writable": conn.is_writable,
+                }
+            )
             conn.reply(200, b"OK")
 
     try:
@@ -87,6 +90,7 @@ def test_flow_control_with_http():
 
         # Make a request using urllib
         import urllib.request
+
         try:
             urllib.request.urlopen(f"http://localhost:{port}/", timeout=1)
         except:

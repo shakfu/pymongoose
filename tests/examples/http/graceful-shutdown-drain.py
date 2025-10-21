@@ -53,7 +53,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     manager = Manager(handler)
-    manager.listen('http://0.0.0.0:8000', http=True)
+    manager.listen("http://0.0.0.0:8000", http=True)
 
     print("Server running on http://0.0.0.0:8000")
     print("Press Ctrl+C or send SIGTERM to shutdown gracefully...")

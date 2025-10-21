@@ -1,4 +1,5 @@
 """Tests for Connection object functionality."""
+
 import pytest
 import threading
 import time
@@ -73,7 +74,7 @@ class TestConnectionProperties:
 
         try:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
             time.sleep(0.2)
 
             # The listener handler should be invoked for the listener connection
@@ -90,26 +91,25 @@ class TestConnectionSend:
 
     def test_reply_with_custom_headers(self):
         """Test reply() with custom headers."""
+
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
-                headers = {
-                    "X-Custom-Header": "TestValue",
-                    "Content-Type": "application/json"
-                }
+                headers = {"X-Custom-Header": "TestValue", "Content-Type": "application/json"}
                 conn.reply(201, '{"status": "created"}', headers)
 
         with ServerThread(handler) as port:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
 
             assert response.status == 201
-            assert response.headers.get('X-Custom-Header') == 'TestValue'
-            assert 'application/json' in response.headers.get('Content-Type', '')
+            assert response.headers.get("X-Custom-Header") == "TestValue"
+            assert "application/json" in response.headers.get("Content-Type", "")
 
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
             assert body == '{"status": "created"}'
 
     def test_reply_with_bytes_body(self):
         """Test reply() with bytes body."""
+
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
                 conn.reply(200, b"Binary response")
@@ -122,12 +122,13 @@ class TestConnectionSend:
 
     def test_reply_with_string_body(self):
         """Test reply() with string body (UTF-8 encoding)."""
+
         def handler(conn, event, data):
             if event == MG_EV_HTTP_MSG:
                 conn.reply(200, "Hello, 世界!")
 
         with ServerThread(handler) as port:
             response = urllib.request.urlopen(f"http://localhost:{port}/", timeout=2)
-            body = response.read().decode('utf-8')
+            body = response.read().decode("utf-8")
 
             assert body == "Hello, 世界!"

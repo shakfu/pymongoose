@@ -6,25 +6,25 @@ This directory contains **17 complete, production-ready examples** demonstrating
 
 ## Table of Contents
 
-- [Priority 1: Core HTTP/WebSocket Examples](#priority-1-core-httpwebsocket-examples)
+- [Core HTTP/WebSocket Examples](#priority-1-core-httpwebsocket-examples)
   - [HTTP Server](#1-http-server-httphttpserverpy)
   - [HTTP Client](#2-http-client-httphttpclientpy)
   - [WebSocket Server](#3-websocket-server-websocketwebsocketserverpy)
   - [WebSocket Timer Broadcasting](#4-websocket-timer-broadcasting-websocketwebsocketbroadcastpy)
-- [Priority 2: MQTT Examples](#priority-2-mqtt-examples)
+- [MQTT Examples](#priority-2-mqtt-examples)
   - [MQTT Client](#5-mqtt-client-mqttmqttclientpy)
   - [MQTT Broker/Server](#6-mqtt-brokerserver-mqttmqttserverpy)
-- [Priority 3: Specialized HTTP Features](#priority-3-specialized-http-features)
+- [Specialized HTTP Features](#priority-3-specialized-http-features)
   - [HTTP Streaming Client](#7-http-streaming-client-httphttpstreamingclientpy)
   - [HTTP File Upload](#8-http-file-upload-httphttpfileuploadpy)
   - [HTTP RESTful Server](#9-http-restful-server-httphttprestfulserverpy)
   - [Server-Sent Events (SSE)](#10-server-sent-events-sse-httphttpsseserverpy)
-- [Priority 4: Network Protocols](#priority-4-network-protocols)
+- [Network Protocols](#priority-4-network-protocols)
   - [SNTP Client](#11-sntp-client-networksntpclientpy)
   - [DNS Resolution Client](#12-dns-resolution-client-networkdnsclientpy)
   - [TCP Echo Server](#13-tcp-echo-server-networktcpechoserverpy)
   - [UDP Echo Server](#14-udp-echo-server-networkudpechoserverpy)
-- [Priority 5: Advanced Features](#priority-5-advanced-features)
+- [Advanced Features](#priority-5-advanced-features)
   - [TLS/SSL HTTPS Server](#15-tlsssl-https-server-advancedtlshttpsserverpy)
   - [HTTP Proxy Client](#16-http-proxy-client-advancedhttpproxyclientpy)
   - [Multi-threaded Server](#17-multi-threaded-server-advancedmultithreadedserverpy)
@@ -37,7 +37,7 @@ This directory contains **17 complete, production-ready examples** demonstrating
 
 ---
 
-## Priority 1: Core HTTP/WebSocket Examples
+## Core HTTP/WebSocket Examples
 
 ### HTTP Examples
 
@@ -203,7 +203,7 @@ open http://localhost:8000/  # Third tab
 
 ---
 
-## Priority 2: MQTT Examples
+## MQTT Examples
 
 ### 5. MQTT Client (`mqtt/mqtt_client.py`)
 
@@ -264,7 +264,7 @@ python mqtt/mqtt_client.py mqtt://localhost:1883 --subscribe "test/#"
 
 ---
 
-## Priority 3: Specialized HTTP Features
+## Specialized HTTP Features
 
 ### 7. HTTP Streaming Client (`http/http_streaming_client.py`)
 
@@ -378,7 +378,7 @@ open http://localhost:8000/
 
 ---
 
-## Priority 4: Network Protocols
+## Network Protocols
 
 ### 11. SNTP Client (`network/sntp_client.py`)
 
@@ -498,7 +498,7 @@ nc -u localhost 8000
 
 ---
 
-## Priority 5: Advanced Features
+## Advanced Features
 
 ### 15. TLS/SSL HTTPS Server (`advanced/tls_https_server.py`)
 
@@ -631,29 +631,29 @@ All examples are standalone Python scripts that can be run directly:
 # From the examples directory
 cd tests/examples
 
-# Priority 1: Core HTTP/WebSocket
+# Core HTTP/WebSocket
 python http/http_server.py
 python http/http_client.py https://httpbin.org/get
 python websocket/websocket_server.py
 python websocket/websocket_broadcast.py
 
-# Priority 2: MQTT
+# MQTT
 python mqtt/mqtt_client.py mqtt://broker.hivemq.com:1883
 python mqtt/mqtt_server.py
 
-# Priority 3: Specialized HTTP
+# Specialized HTTP
 python http/http_streaming_client.py https://httpbin.org/stream/10
 python http/http_file_upload.py
 python http/http_restful_server.py
 python http/http_sse_server.py
 
-# Priority 4: Network Protocols
+# Network Protocols
 python network/sntp_client.py
 python network/dns_client.py google.com
 python network/tcp_echo_server.py
 python network/udp_echo_server.py
 
-# Priority 5: Advanced Features
+# Advanced Features
 python advanced/tls_https_server.py --skip-verify
 python advanced/http_proxy_client.py http://localhost:3128 http://www.example.com
 python advanced/multithreaded_server.py
@@ -745,7 +745,7 @@ These examples serve multiple purposes:
 
  **ALL 17 EXAMPLES COMPLETE**
 
-| Priority | Category | Examples | Status |
+| # | Category | Examples | Status |
 |----------|----------|----------|--------|
 | 1 | Core HTTP/WebSocket | 4 | [x] Complete |
 | 2 | MQTT | 2 | [x] Complete |

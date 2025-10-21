@@ -1,4 +1,5 @@
 """Tests for TLS configuration."""
+
 import pytest
 from pymongoose import Manager, TlsOpts, MG_EV_HTTP_MSG
 
@@ -6,21 +7,16 @@ from pymongoose import Manager, TlsOpts, MG_EV_HTTP_MSG
 def test_tls_opts_creation():
     """Test TlsOpts object creation."""
     opts = TlsOpts()
-    assert opts.ca == b''
-    assert opts.cert == b''
-    assert opts.key == b''
-    assert opts.name == b''
+    assert opts.ca == b""
+    assert opts.cert == b""
+    assert opts.key == b""
+    assert opts.name == b""
     assert opts.skip_verification == False
 
 
 def test_tls_opts_with_strings():
     """Test TlsOpts with string arguments."""
-    opts = TlsOpts(
-        ca="ca content",
-        cert="cert content",
-        key="key content",
-        name="example.com"
-    )
+    opts = TlsOpts(ca="ca content", cert="cert content", key="key content", name="example.com")
     assert opts.ca == b"ca content"
     assert opts.cert == b"cert content"
     assert opts.key == b"key content"
@@ -29,12 +25,7 @@ def test_tls_opts_with_strings():
 
 def test_tls_opts_with_bytes():
     """Test TlsOpts with bytes arguments."""
-    opts = TlsOpts(
-        ca=b"ca bytes",
-        cert=b"cert bytes",
-        key=b"key bytes",
-        name=b"example.com"
-    )
+    opts = TlsOpts(ca=b"ca bytes", cert=b"cert bytes", key=b"key bytes", name=b"example.com")
     assert opts.ca == b"ca bytes"
     assert opts.cert == b"cert bytes"
     assert opts.key == b"key bytes"
@@ -58,9 +49,9 @@ def test_tls_init_method_exists():
         listener = manager.listen("http://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(listener, 'tls_init')
+        assert hasattr(listener, "tls_init")
         assert callable(listener.tls_init)
-        assert hasattr(listener, 'tls_free')
+        assert hasattr(listener, "tls_free")
         assert callable(listener.tls_free)
     finally:
         manager.close()
@@ -131,7 +122,7 @@ def test_is_tls_property():
         listener = manager.listen("http://127.0.0.1:0")
         manager.poll(10)
 
-        assert hasattr(listener, 'is_tls')
+        assert hasattr(listener, "is_tls")
         # HTTP connection starts as non-TLS
         # (TLS flag is set during handshake, not at creation)
         assert listener.is_tls == False or listener.is_tls == True  # Either is valid
@@ -144,8 +135,8 @@ def test_tls_opts_partial():
     """Test TlsOpts with only some fields set."""
     opts = TlsOpts(ca="ca content", name="example.com")
     assert opts.ca == b"ca content"
-    assert opts.cert == b''
-    assert opts.key == b''
+    assert opts.cert == b""
+    assert opts.key == b""
     assert opts.name == b"example.com"
 
 
@@ -173,7 +164,7 @@ def test_tls_init_multiple_times():
 def test_tls_opts_none_values():
     """Test TlsOpts with None values."""
     opts = TlsOpts(ca=None, cert=None, key=None, name=None)
-    assert opts.ca == b''
-    assert opts.cert == b''
-    assert opts.key == b''
-    assert opts.name == b''
+    assert opts.ca == b""
+    assert opts.cert == b""
+    assert opts.key == b""
+    assert opts.name == b""
