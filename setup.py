@@ -49,7 +49,9 @@ def build_extensions():
         extra_compile_args.extend(["-O3", "-std=c99"])
     elif sys.platform == "linux":
         # Linux specific flags
+        # _GNU_SOURCE enables POSIX extensions needed for clock_gettime, alloca, ip_mreq
         extra_compile_args.extend(["-O3", "-std=c99"])
+        define_macros.append(("_GNU_SOURCE", "1"))
     elif sys.platform == "win32":
         # Windows specific flags
         extra_compile_args.extend(["/O2"])
