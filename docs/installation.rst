@@ -122,13 +122,33 @@ To run the test suite:
 
 .. code-block:: bash
 
-    # Using make
+    # Using make (recommended)
     make test
+
+    # Fast tests (minimal output)
+    make test-fast
+
+    # With coverage report
+    make test-coverage
 
     # Using pytest directly
     PYTHONPATH=src pytest tests/ -v
 
 All 210 tests should pass. If you encounter failures, please report them on the `issue tracker <https://github.com/your-username/pymongoose/issues>`_.
+
+Common Makefile Commands
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    make help           # Show all available commands
+    make install        # Install dependencies
+    make build          # Force rebuild
+    make test           # Run tests
+    make docs           # Build documentation
+    make docs-serve     # Build and open docs in browser
+    make clean          # Remove build artifacts
+    make check          # Run all quality checks
 
 Troubleshooting
 ---------------

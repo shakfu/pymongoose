@@ -1425,9 +1425,6 @@ wheels = [
 name = "pymongoose"
 version = "0.1.4"
 source = { editable = "." }
-dependencies = [
-    { name = "propcache" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -1447,7 +1444,6 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "propcache", specifier = ">=0.4.1" }]
 
 [package.metadata.requires-dev]
 dev = [
